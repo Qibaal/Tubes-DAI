@@ -4,6 +4,7 @@ from algorithms.sidewaysmovehc import hill_climbing_with_sideways_move
 from algorithms.randomrestarthc import random_restart_hill_climbing
 from algorithms.stochastichc import stochastic_hill_climbing  # Import the stochastic hill-climbing function
 from algorithms.simulatedannealing import simulated_annealing  # Import the simulated annealing function
+from algorithms.genetic import genetic_algorithm  # Import the genetic algorithm function
 
 class MagicCube:
     def __init__(self, cube_data=None, size=5):
@@ -122,5 +123,8 @@ magic_cube.display_cost()
 # # Call the stochastic hill-climbing algorithm
 # stochastic_hill_climbing(magic_cube)
 
-# Call the simulated annealing algorithm
-simulated_annealing(magic_cube)
+# # Call the simulated annealing algorithm
+# simulated_annealing(magic_cube)
+
+# Call the genetic algorithm in one line
+genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutation_rate=0.1, elitism=True)
