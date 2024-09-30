@@ -74,6 +74,7 @@ class MagicCube:
         conflicts = 0
         for i in range(self.size):
             if sum(self.cube[j, j, i] for j in range(self.size)) != self.magic_number:
+                print("Left to right: ", sum(self.cube[j, j, i] for j in range(self.size)))
                 conflicts += 1
         return conflicts
 
@@ -81,21 +82,17 @@ class MagicCube:
         conflicts = 0
         for i in range(self.size):
             if sum(self.cube[j, self.size - j - 1, i] for j in range(self.size)) != self.magic_number:
+                print("Right to left: ", sum(self.cube[j, self.size - j - 1, i] for j in range(self.size)))
                 conflicts += 1
         return conflicts
 
     def count_conflicts(self):
         conflicts = 0
         conflicts += self.check_rows()
-        print(self.check_rows())
         conflicts += self.check_columns()
-        print(self.check_columns())
         conflicts += self.check_main_diagonals()
-        print(self.check_main_diagonals())
         conflicts += self.check_pillars()
-        print(self.check_pillars())
         conflicts += self.check_space_diagonals()
-        print(self.check_space_diagonals())
         conflicts += self.check_left_to_right_diagonals()
         print(self.check_left_to_right_diagonals())
         conflicts += self.check_right_to_left_diagonals()
