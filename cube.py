@@ -1,4 +1,5 @@
 import numpy as np
+from algorithms.steepestascenthc import steepest_ascent_hill_climbing  # Import the steepest ascent hill-climbing function
 
 class MagicCube:
     def __init__(self, cube_data=None, size=5):
@@ -104,3 +105,6 @@ magic_cube = MagicCube(cube_data=cube_data)
 
 # Display the cost of the current cube configuration
 magic_cube.display_cost()
+
+# Call the steepest ascent hill-climbing algorithm
+steepest_ascent_hill_climbing(magic_cube)
