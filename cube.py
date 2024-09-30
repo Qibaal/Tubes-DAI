@@ -2,6 +2,7 @@ import numpy as np
 from algorithms.steepestascenthc import steepest_ascent_hill_climbing  # Import the steepest ascent hill-climbing function
 from algorithms.sidewaysmovehc import hill_climbing_with_sideways_move
 from algorithms.randomrestarthc import random_restart_hill_climbing
+from algorithms.stochastichc import stochastic_hill_climbing  # Import the stochastic hill-climbing function
 
 class MagicCube:
     def __init__(self, cube_data=None, size=5):
@@ -114,5 +115,8 @@ magic_cube.display_cost()
 # # Call the hill-climbing with sideways move algorithm
 # hill_climbing_with_sideways_move(magic_cube, max_sideways_moves=1000, max_iterations=1000)
 
-# Call the random restart hill-climbing algorithm
-random_restart_hill_climbing(magic_cube)
+# # Call the random restart hill-climbing algorithm
+# random_restart_hill_climbing(magic_cube)
+
+# Call the stochastic hill-climbing algorithm
+stochastic_hill_climbing(magic_cube)
