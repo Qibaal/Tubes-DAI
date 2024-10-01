@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt  # Import library for plotting
 
 def create_initial_population(size, population_size):
     """
@@ -111,6 +112,9 @@ def genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutati
     best_cube = None
     best_fitness = float('inf')
 
+    # Store best fitness value for each generation
+    fitness_progress = []
+
     for generation in range(generations):
         fitness_scores = [calculate_fitness(cube, magic_number) for cube in population]
         
@@ -121,12 +125,15 @@ def genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutati
             best_cube = population[fitness_scores.index(min_fitness)]
             print(f"Generation {generation}: Best fitness = {best_fitness}")
         
+        # Store the best fitness value in the current generation
+        fitness_progress.append(best_fitness)
+        
         # If we find a perfect solution, terminate early
         if best_fitness == 0:
             print(f"Solution found in generation {generation}")
             print("Best solution found:")
             print(best_cube)
-            return best_cube
+            break
         
         new_population = []
         
@@ -148,7 +155,16 @@ def genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutati
         
         population = new_population
     
+    # Plot the fitness progression
+    plt.plot(fitness_progress)
+    plt.title("Fitness Progression Over Generations")
+    plt.xlabel("Generations")
+    plt.ylabel("Best Fitness (Cost)")
+    plt.grid(True)
+    plt.show()
+
     print("Solution not found within the given generations.")
     print("Best solution found:")
     print(best_cube)
+    print(f"Total Cost: {best_fitness}")
     return best_cube

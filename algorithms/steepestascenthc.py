@@ -1,5 +1,6 @@
 import numpy as np
 import itertools
+import matplotlib.pyplot as plt  # Import for plotting
 
 def steepest_ascent_hill_climbing(cube):
     """
@@ -15,10 +16,14 @@ def steepest_ascent_hill_climbing(cube):
     max_iterations = 1000  # Define the maximum number of iterations allowed
     iteration = 0
     current_cost = cube.calculate_cost()  # Initial cost
+    cost_progress = []  # List to track cost at each iteration
     
     # Iterate until there are no conflicts (cost == 0) or max iterations are reached
     while current_cost > 0 and iteration < max_iterations:
         print(f"Iteration {iteration}: {current_cost} cost")
+        
+        # Append the current cost to the progress list for plotting later
+        cost_progress.append(current_cost)
         
         best_cube = cube.cube.copy()  # Keep a copy of the current cube
         best_cost = current_cost  # Start with the current cost
@@ -61,7 +66,17 @@ def steepest_ascent_hill_climbing(cube):
     # Final result after all iterations
     if current_cost == 0:
         print(f"Solved the magic cube in {iteration} iterations!")
-        return True
+        solved = True
     else:
         print(f"Stopped after {iteration} iterations with {current_cost} cost remaining.")
-        return False
+        solved = False
+    
+    # Plot the cost progression over iterations
+    plt.plot(range(len(cost_progress)), cost_progress)
+    plt.title("Cost Progression during Steepest Ascent Hill-Climbing")
+    plt.xlabel("Iteration")
+    plt.ylabel("Total Cost")
+    plt.grid(True)
+    plt.show()
+
+    return solved

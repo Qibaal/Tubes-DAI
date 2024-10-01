@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import itertools
+import matplotlib.pyplot as plt  # Import library for plotting
 
 def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_restart=1000):
     """
@@ -15,6 +16,8 @@ def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_resta
     Returns:
     - solved (bool): Returns True if the cube is solved (i.e., cost is zero), False otherwise.
     """
+    all_fitness_progress = []  # List to store all fitness values across restarts
+
     for restart in range(max_restarts):
         print(f"Restart {restart+1}/{max_restarts}")
         
@@ -26,10 +29,14 @@ def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_resta
         
         current_cost = cube.calculate_cost()  # Calculate the cost for the randomized cube
         
+        # Track fitness progress for this restart
+        fitness_progress = []
+
         # Perform hill-climbing for this restart
         iteration = 0
         while current_cost > 0 and iteration < max_iterations_per_restart:
             print(f"Iteration {iteration}: {current_cost} cost")
+            fitness_progress.append(current_cost)  # Append current cost to the fitness progress
             
             best_cube = cube.cube.copy()  # Keep a copy of the current cube
             best_cost = current_cost  # Start with the current cost
@@ -68,12 +75,34 @@ def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_resta
                 print(f"Elements swapped: {cube.cube[pos1]}, {cube.cube[pos2]}")
             
             iteration += 1
+
+        # Append the fitness progress of this restart to the overall list
+        all_fitness_progress.append(fitness_progress)
         
         # If the cube is solved, return success
         if current_cost == 0:
             print(f"Solved the magic cube in {iteration} iterations during restart {restart+1}!")
+            # Plot the fitness progression for this restart
+            plt.plot(fitness_progress)
+            plt.title(f"Fitness Progression in Restart {restart+1}")
+            plt.xlabel("Iterations")
+            plt.ylabel("Cost (Fitness)")
+            plt.grid(True)
+            plt.show()
             return True
     
     # If after all restarts, the solution was not found
     print(f"Stopped after {max_restarts} restarts with {current_cost} cost remaining.")
+
+    # Plot all fitness progress across restarts
+    for idx, fitness_progress in enumerate(all_fitness_progress):
+        plt.plot(fitness_progress, label=f"Restart {idx+1}")
+    
+    plt.title("Cost Progression Across All Restarts")
+    plt.xlabel("Iterations")
+    plt.ylabel("Cost")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    
     return False

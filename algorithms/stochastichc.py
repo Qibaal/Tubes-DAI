@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt  # Import for plotting
 
 def stochastic_hill_climbing(cube, max_iterations=1000):
     """
@@ -15,10 +16,14 @@ def stochastic_hill_climbing(cube, max_iterations=1000):
     """
     iteration = 0
     current_cost = cube.calculate_cost()  # Initial cost
-    
+    cost_progress = []  # List to track cost at each iteration
+
     # Iterate until the cube is solved or max iterations are reached
     while current_cost > 0 and iteration < max_iterations:
         print(f"Iteration {iteration}: {current_cost} cost")
+        
+        # Record the current cost for plotting
+        cost_progress.append(current_cost)
         
         # Copy the current cube configuration
         new_cube = cube.cube.copy()
@@ -47,7 +52,15 @@ def stochastic_hill_climbing(cube, max_iterations=1000):
             cube.cube[pos1], cube.cube[pos2] = cube.cube[pos2], cube.cube[pos1]
         
         iteration += 1
-    
+
+    # Plot the cost progression over iterations
+    plt.plot(range(len(cost_progress)), cost_progress)
+    plt.title("Cost Progression during Stochastic Hill-Climbing")
+    plt.xlabel("Iteration")
+    plt.ylabel("Total Cost")
+    plt.grid(True)
+    plt.show()
+
     # Final result after all iterations
     if current_cost == 0:
         print(f"Solved the magic cube in {iteration} iterations!")

@@ -126,5 +126,5 @@ magic_cube.display_cost()
 # # Call the simulated annealing algorithm
 # simulated_annealing(magic_cube)
 
-# Call the genetic algorithm in one line
-genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutation_rate=0.1, elitism=True)
+# # Call the genetic algorithm in one line
+# genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutation_rate=0.1, elitism=True)
