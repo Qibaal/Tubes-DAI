@@ -14,49 +14,45 @@ def create_initial_population(size, population_size):
     return population
 
 def calculate_fitness(cube, magic_number):
-    """
-    Calculate the fitness (cost) of a cube.
-    The fitness is the sum of absolute differences between the magic number and the sums of all rows, columns, pillars, and diagonals.
-    """
-    size = cube.shape[0]
-    cost = 0
-    
-    # Cost for rows
-    for level in range(size):
-        for row in range(size):
-            row_sum = cube[level, row, :].sum()
-            cost += abs(row_sum - magic_number)
-    
-    # Cost for columns
-    for level in range(size):
-        for col in range(size):
-            col_sum = cube[level, :, col].sum()
-            cost += abs(col_sum - magic_number)
-    
-    # Cost for pillars (z-axis)
-    for row in range(size):
-        for col in range(size):
-            pillar_sum = cube[:, row, col].sum()
-            cost += abs(pillar_sum - magic_number)
-    
-    # Cost for main diagonals on each level
-    for level in range(size):
-        diag1_sum = np.trace(cube[level])  # Left-to-right diagonal
-        diag2_sum = np.trace(np.fliplr(cube[level]))  # Right-to-left diagonal
-        cost += abs(diag1_sum - magic_number)
-        cost += abs(diag2_sum - magic_number)
-    
-    # Cost for space diagonals (through all levels)
-    diag1 = sum(cube[i, i, i] for i in range(size))  # Top-left to bottom-right
-    diag2 = sum(cube[i, i, size - i - 1] for i in range(size))  # Top-right to bottom-left
-    diag3 = sum(cube[i, size - i - 1, i] for i in range(size))  # Bottom-left to top-right
-    diag4 = sum(cube[i, size - i - 1, size - i - 1] for i in range(size))  # Bottom-right to top-left
-    cost += abs(diag1 - magic_number)
-    cost += abs(diag2 - magic_number)
-    cost += abs(diag3 - magic_number)
-    cost += abs(diag4 - magic_number)
+        cost = 0
+        
+        # Cost for rows
+        for level in range(5):
+            for row in range(5):
+                row_sum = cube[level, row, :].sum()
+                cost += row_sum != magic_number
+        
+        # Cost for columns
+        for level in range(5):
+            for col in range(5):
+                col_sum = cube[level, :, col].sum()
+                cost += col_sum != magic_number
+        
+        # Cost for pillars (z-axis)
+        for row in range(5):
+            for col in range(5):
+                pillar_sum = cube[:, row, col].sum()
+                cost += pillar_sum != magic_number
+        
+        # Cost for main diagonals on each level
+        for level in range(5):
+            diag1_sum = np.trace(cube[level])  # Left-to-right diagonal
+            diag2_sum = np.trace(np.fliplr(cube[level]))  # Right-to-left diagonal
+            cost += diag1_sum != magic_number
+            cost += diag2_sum != magic_number
+        
+        # Cost for space diagonals (through all levels)
+        diag1 = sum(cube[i, i, i] for i in range(5))  # Top-left to bottom-right
+        diag2 = sum(cube[i, i, 5 - i - 1] for i in range(5))  # Top-right to bottom-left
+        diag3 = sum(cube[i, 5 - i - 1, i] for i in range(5))  # Bottom-left to top-right
+        diag4 = sum(cube[i, 5 - i - 1, 5 - i - 1] for i in range(5))  # Bottom-right to top-left
+        cost += diag1 != magic_number
+        cost += diag2 != magic_number
+        cost += diag3 != magic_number
+        cost += diag4 != magic_number
 
-    return cost
+        return cost
+
 
 def selection(population, fitness_scores):
     """

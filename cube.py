@@ -102,25 +102,22 @@ cube_data = [
 ]
 
 # Initialize the magic cube with the provided cube data
-magic_cube = MagicCube(cube_data=cube_data)
+magic_cube = MagicCube()
 
 # Display the cost of the current cube configuration
 magic_cube.display_cost()
 
-# # Call the steepest ascent hill-climbing algorithm
-# steepest_ascent_hill_climbing(magic_cube)
+com = input("Masukkan algo: ")
 
-# # Call the hill-climbing with sideways move algorithm
-# hill_climbing_with_sideways_move(magic_cube, max_sideways_moves=1000, max_iterations=1000)
-
-# # Call the random restart hill-climbing algorithm
-# random_restart_hill_climbing(magic_cube)
-
-# # Call the stochastic hill-climbing algorithm
-# stochastic_hill_climbing(magic_cube)
-
-# # Call the simulated annealing algorithm
-# simulated_annealing(magic_cube)
-
-# # Call the genetic algorithm in one line
-# genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutation_rate=0.1, elitism=True)
+if com == "sa":
+    steepest_ascent_hill_climbing(magic_cube)
+elif com == "sm":
+    hill_climbing_with_sideways_move(magic_cube, max_sideways_moves=1000, max_iterations=1000)
+elif com == "rr":
+    random_restart_hill_climbing(magic_cube)
+elif com ==  "s":
+    stochastic_hill_climbing(magic_cube) 
+elif com == "sa":
+    simulated_annealing(magic_cube)
+elif com == "g":
+    genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutation_rate=0.1, elitism=True)
