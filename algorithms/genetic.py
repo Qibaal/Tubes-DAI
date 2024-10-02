@@ -53,6 +53,50 @@ def calculate_fitness(cube, magic_number):
 
         return cost
 
+def calculate_actual_fitness(cube, magic_number):
+        """
+        Objective function that calculates the total cost based on the deviations from the magic number.
+        The cost is the sum of absolute differences for rows, columns, pillars, and diagonals.
+        """
+        cost = 0
+        
+        # Cost for rows
+        for level in range(5):
+            for row in range(5):
+                row_sum = cube[level, row, :].sum()
+                cost += abs(row_sum - magic_number)
+        
+        # Cost for columns
+        for level in range(5):
+            for col in range(5):
+                col_sum = cube[level, :, col].sum()
+                cost += abs(col_sum - magic_number)
+        
+        # Cost for pillars (z-axis)
+        for row in range(5):
+            for col in range(5):
+                pillar_sum = cube[:, row, col].sum()
+                cost += abs(pillar_sum - magic_number)
+        
+        # Cost for main diagonals on each level
+        for level in range(5):
+            diag1_sum = np.trace(cube[level])  # Left-to-right diagonal
+            diag2_sum = np.trace(np.fliplr(cube[level]))  # Right-to-left diagonal
+            cost += abs(diag1_sum - magic_number)
+            cost += abs(diag2_sum - magic_number)
+        
+        # Cost for space diagonals (through all levels)
+        diag1 = sum(cube[i, i, i] for i in range(5))  # Top-left to bottom-right
+        diag2 = sum(cube[i, i, 5 - i - 1] for i in range(5))  # Top-right to bottom-left
+        diag3 = sum(cube[i, 5 - i - 1, i] for i in range(5))  # Bottom-left to top-right
+        diag4 = sum(cube[i, 5 - i - 1, 5 - i - 1] for i in range(5))  # Bottom-right to top-left
+        cost += abs(diag1 - magic_number)
+        cost += abs(diag2 - magic_number)
+        cost += abs(diag3 - magic_number)
+        cost += abs(diag4 - magic_number)
+
+        return cost
+
 
 def selection(population, fitness_scores):
     """
@@ -99,7 +143,7 @@ def mutate(cube):
     
     return cube
 
-def genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutation_rate=0.1, elitism=True):
+def genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutation_rate=0.15, elitism=True):
     """
     Solve the magic cube using a genetic algorithm.
     """

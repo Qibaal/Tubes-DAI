@@ -3,7 +3,7 @@ import random
 import math
 import matplotlib.pyplot as plt  # Import for plotting
 
-def simulated_annealing(cube, initial_temperature=1000, cooling_rate=0.99, min_temperature=1):
+def simulated_annealing(cube, initial_temperature=15500, cooling_rate=0.99, min_temperature=1):
     """
     Solves the magic cube using Simulated Annealing.
 
@@ -17,7 +17,7 @@ def simulated_annealing(cube, initial_temperature=1000, cooling_rate=0.99, min_t
     - solved (bool): Returns True if the cube is solved (i.e., cost is zero), False otherwise.
     """
     current_temperature = initial_temperature
-    current_cost = cube.calculate_cost()
+    current_cost = cube.calculate_actual_cost()
     cost_progress = []  # List to track cost at each iteration
     
     iteration = 0
@@ -42,7 +42,7 @@ def simulated_annealing(cube, initial_temperature=1000, cooling_rate=0.99, min_t
         
         # Calculate the cost of the new configuration
         cube.cube = new_cube
-        new_cost = cube.calculate_cost()
+        new_cost = cube.calculate_actual_cost()
         
         # Determine if we accept the new configuration
         cost_difference = new_cost - current_cost
