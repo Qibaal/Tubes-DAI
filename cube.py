@@ -41,46 +41,42 @@ class MagicCube:
         print(self.cube)
     
     def calculate_cost(self):
-        """
-        Objective function that calculates the total cost based on the deviations from the magic number.
-        The cost is the sum of absolute differences for rows, columns, pillars, and diagonals.
-        """
         cost = 0
         
         # Cost for rows
         for level in range(self.size):
             for row in range(self.size):
                 row_sum = self.cube[level, row, :].sum()
-                cost += abs(row_sum - self.magic_number)
+                cost += row_sum != self.magic_number
         
         # Cost for columns
         for level in range(self.size):
             for col in range(self.size):
                 col_sum = self.cube[level, :, col].sum()
-                cost += abs(col_sum - self.magic_number)
+                cost += col_sum != self.magic_number
         
         # Cost for pillars (z-axis)
         for row in range(self.size):
             for col in range(self.size):
                 pillar_sum = self.cube[:, row, col].sum()
-                cost += abs(pillar_sum - self.magic_number)
+                cost += pillar_sum != self.magic_number
         
         # Cost for main diagonals on each level
         for level in range(self.size):
             diag1_sum = np.trace(self.cube[level])  # Left-to-right diagonal
             diag2_sum = np.trace(np.fliplr(self.cube[level]))  # Right-to-left diagonal
-            cost += abs(diag1_sum - self.magic_number)
-            cost += abs(diag2_sum - self.magic_number)
+            cost += diag1_sum != self.magic_number
+            cost += diag2_sum != self.magic_number
         
         # Cost for space diagonals (through all levels)
         diag1 = sum(self.cube[i, i, i] for i in range(self.size))  # Top-left to bottom-right
         diag2 = sum(self.cube[i, i, self.size - i - 1] for i in range(self.size))  # Top-right to bottom-left
         diag3 = sum(self.cube[i, self.size - i - 1, i] for i in range(self.size))  # Bottom-left to top-right
         diag4 = sum(self.cube[i, self.size - i - 1, self.size - i - 1] for i in range(self.size))  # Bottom-right to top-left
-        cost += abs(diag1 - self.magic_number)
-        cost += abs(diag2 - self.magic_number)
-        cost += abs(diag3 - self.magic_number)
-        cost += abs(diag4 - self.magic_number)
+        cost += diag1 != self.magic_number
+        cost += diag2 != self.magic_number
+        cost += diag3 != self.magic_number
+        cost += diag4 != self.magic_number
 
         return cost
 
@@ -106,7 +102,7 @@ cube_data = [
 ]
 
 # Initialize the magic cube with the provided cube data
-magic_cube = MagicCube()
+magic_cube = MagicCube(cube_data=cube_data)
 
 # Display the cost of the current cube configuration
 magic_cube.display_cost()
