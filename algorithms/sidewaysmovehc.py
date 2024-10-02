@@ -24,7 +24,7 @@ def hill_climbing_with_sideways_move(cube, max_sideways_moves=100, max_iteration
     last_swaps = []  # List to keep track of the last swaps
 
     while current_cost > 0 and iteration < max_iterations:
-        print(f"Iteration {iteration}: {current_cost} cost")
+        print(f"Iteration {iteration}: {current_cost} cost, Sideways moves: {sideways_moves}")
         
         best_cube = cube.cube.copy()  # Keep a copy of the current cube
         best_cost = current_cost  # Start with the current cost
@@ -70,9 +70,6 @@ def hill_climbing_with_sideways_move(cube, max_sideways_moves=100, max_iteration
                 last_swaps.append(best_swap)
             else:
                 last_swaps = [best_swap]  # Reset tracking if new swap is found
-
-            # Reset sideways_moves after each swap
-            sideways_moves = 0
 
             # If we have repeated the same swap too many times, stop
             if len(last_swaps) >= max_repeated_swaps and last_swaps[-max_repeated_swaps:] == [best_swap] * max_repeated_swaps:

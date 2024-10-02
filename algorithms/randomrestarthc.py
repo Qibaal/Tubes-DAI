@@ -15,10 +15,8 @@ def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_resta
     
     Returns:
     - solved (bool): Returns True if the cube is solved (i.e., cost is zero), False otherwise.
-    - total_value (dict): Returns a dictionary containing the best cube configuration and its corresponding cost.
     """
     all_fitness_progress = []  # List to store all fitness values across restarts
-    total_value = {"best_cube": None, "best_cost": float('inf')}  # Store the best configuration and cost found
 
     for restart in range(max_restarts):
         print(f"Restart {restart+1}/{max_restarts}")
@@ -81,12 +79,7 @@ def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_resta
         # Append the fitness progress of this restart to the overall list
         all_fitness_progress.append(fitness_progress)
         
-        # If this restart has found a better solution, update the total_value
-        if current_cost < total_value["best_cost"]:
-            total_value["best_cost"] = current_cost
-            total_value["best_cube"] = cube.cube.copy()
-        
-        # If the cube is solved, return success and total_value
+        # If the cube is solved, return success
         if current_cost == 0:
             print(f"Solved the magic cube in {iteration} iterations during restart {restart+1}!")
             # Plot the fitness progression for this restart
@@ -96,10 +89,10 @@ def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_resta
             plt.ylabel("Cost (Fitness)")
             plt.grid(True)
             plt.show()
-            return True, total_value
+            return True
     
     # If after all restarts, the solution was not found
-    print(f"Stopped after {max_restarts} restarts with {total_value['best_cost']} as the best cost found.")
+    print(f"Stopped after {max_restarts} restarts with {current_cost} cost remaining.")
 
     # Plot all fitness progress across restarts
     for idx, fitness_progress in enumerate(all_fitness_progress):
@@ -112,4 +105,4 @@ def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_resta
     plt.grid(True)
     plt.show()
     
-    return False, total_value
+    return False
