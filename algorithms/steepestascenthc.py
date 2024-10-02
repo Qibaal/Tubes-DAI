@@ -15,7 +15,7 @@ def steepest_ascent_hill_climbing(cube):
     """
     max_iterations = 1000  # Define the maximum number of iterations allowed
     iteration = 0
-    current_cost = cube.calculate_cost()  # Initial cost
+    current_cost = cube.calculate_actual_cost()  # Initial cost
     cost_progress = []  # List to track cost at each iteration
     
     # Iterate until there are no conflicts (cost == 0) or max iterations are reached
@@ -38,7 +38,7 @@ def steepest_ascent_hill_climbing(cube):
             
             # Set the cube to the new state and calculate the cost
             cube.cube = new_cube
-            new_cost = cube.calculate_cost()
+            new_cost = cube.calculate_actual_cost()
             
             # If the new configuration has a lower cost, update the best cube
             if new_cost < best_cost:

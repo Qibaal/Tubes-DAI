@@ -15,7 +15,7 @@ def stochastic_hill_climbing(cube, max_iterations=1000):
     - solved (bool): Returns True if the cube is solved (i.e., cost is zero), False otherwise.
     """
     iteration = 0
-    current_cost = cube.calculate_cost()  # Initial cost
+    current_cost = cube.calculate_actual_cost()  # Initial cost
     cost_progress = []  # List to track cost at each iteration
 
     # Iterate until the cube is solved or max iterations are reached
@@ -41,7 +41,7 @@ def stochastic_hill_climbing(cube, max_iterations=1000):
         
         # Set the cube to the new state and calculate the cost
         cube.cube = new_cube
-        new_cost = cube.calculate_cost()
+        new_cost = cube.calculate_actual_cost()
 
         # If the new configuration has a lower cost, accept the change
         if new_cost < current_cost:

@@ -27,7 +27,7 @@ def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_resta
             np.random.shuffle(numbers)
             cube.cube = np.array(numbers).reshape((cube.size, cube.size, cube.size))
         
-        current_cost = cube.calculate_cost()  # Calculate the cost for the randomized cube
+        current_cost = cube.calculate_actual_cost()  # Calculate the cost for the randomized cube
         
         # Track fitness progress for this restart
         fitness_progress = []
@@ -51,7 +51,7 @@ def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_resta
                 
                 # Set the cube to the new state and calculate the cost
                 cube.cube = new_cube
-                new_cost = cube.calculate_cost()
+                new_cost = cube.calculate_actual_cost()
                 
                 # If the new configuration has a lower cost, update the best cube
                 if new_cost < best_cost:

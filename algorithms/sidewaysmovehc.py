@@ -18,7 +18,7 @@ def hill_climbing_with_sideways_move(cube, max_sideways_moves=100, max_iteration
     """
     iteration = 0
     sideways_moves = 0  # Counter for the sideways moves
-    current_cost = cube.calculate_cost()  # Initial cost
+    current_cost = cube.calculate_actual_cost()  # Initial cost
     cost_progress = []  # List to track cost at each iteration
 
     last_swaps = []  # List to keep track of the last swaps
@@ -39,7 +39,7 @@ def hill_climbing_with_sideways_move(cube, max_sideways_moves=100, max_iteration
             
             # Set the cube to the new state and calculate the cost
             cube.cube = new_cube
-            new_cost = cube.calculate_cost()
+            new_cost = cube.calculate_actual_cost()
             
             # If the new configuration has a lower or equal cost, update the best cube
             if new_cost < best_cost or (new_cost == best_cost and sideways_moves < max_sideways_moves):
