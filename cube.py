@@ -112,7 +112,7 @@ com = input("Masukkan algo: ")
 if com == "sa":
     steepest_ascent_hill_climbing(magic_cube)
 elif com == "sm":
-    hill_climbing_with_sideways_move(magic_cube, max_sideways_moves=1000, max_iterations=1000)
+    hill_climbing_with_sideways_move(magic_cube, max_sideways_moves=10, max_iterations=1000)
 elif com == "rr":
     random_restart_hill_climbing(magic_cube)
 elif com ==  "s":
@@ -120,4 +120,4 @@ elif com ==  "s":
 elif com == "sa":
     simulated_annealing(magic_cube)
 elif com == "g":
-    genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutation_rate=0.1, elitism=True)
+    genetic_algorithm(magic_cube=magic_cube, population_size=100, generations=1000, mutation_rate=0.1)

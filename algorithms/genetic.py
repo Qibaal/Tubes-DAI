@@ -1,63 +1,9 @@
-import numpy as np
 import random
 import matplotlib.pyplot as plt  # Import library for plotting
-
-def create_initial_population(size, population_size):
-    """
-    Generate an initial population of random 5x5x5 cubes.
-    Each cube is a 3D array of shape (5, 5, 5) with numbers from 1 to size^3.
-    """
-    population = []
-    for _ in range(population_size):
-        cube = np.random.permutation(range(1, size**3 + 1)).reshape((size, size, size))
-        population.append(cube)
-    return population
-
-def calculate_fitness(cube, magic_number):
-        cost = 0
-        
-        # Cost for rows
-        for level in range(5):
-            for row in range(5):
-                row_sum = cube[level, row, :].sum()
-                cost += row_sum != magic_number
-        
-        # Cost for columns
-        for level in range(5):
-            for col in range(5):
-                col_sum = cube[level, :, col].sum()
-                cost += col_sum != magic_number
-        
-        # Cost for pillars (z-axis)
-        for row in range(5):
-            for col in range(5):
-                pillar_sum = cube[:, row, col].sum()
-                cost += pillar_sum != magic_number
-        
-        # Cost for main diagonals on each level
-        for level in range(5):
-            diag1_sum = np.trace(cube[level])  # Left-to-right diagonal
-            diag2_sum = np.trace(np.fliplr(cube[level]))  # Right-to-left diagonal
-            cost += diag1_sum != magic_number
-            cost += diag2_sum != magic_number
-        
-        # Cost for space diagonals (through all levels)
-        diag1 = sum(cube[i, i, i] for i in range(5))  # Top-left to bottom-right
-        diag2 = sum(cube[i, i, 5 - i - 1] for i in range(5))  # Top-right to bottom-left
-        diag3 = sum(cube[i, 5 - i - 1, i] for i in range(5))  # Bottom-left to top-right
-        diag4 = sum(cube[i, 5 - i - 1, 5 - i - 1] for i in range(5))  # Bottom-right to top-left
-        cost += diag1 != magic_number
-        cost += diag2 != magic_number
-        cost += diag3 != magic_number
-        cost += diag4 != magic_number
-
-        return cost
-
 
 def selection(population, fitness_scores):
     """
     Select two parents from the population using tournament selection.
-    Use population indices to ensure that no invalid index errors occur.
     """
     tournament_size = 3
     selected_indices = random.sample(range(len(population)), k=tournament_size)
@@ -72,7 +18,7 @@ def selection(population, fitness_scores):
 
 def crossover(parent1, parent2):
     """
-    Perform crossover between two parent cubes. Swap a random slice of the cube (e.g., rows or layers).
+    Perform crossover between two parent cubes (numpy arrays). Swap a random slice of the cube (e.g., rows or layers).
     """
     size = parent1.shape[0]
     child = parent1.copy()
@@ -84,11 +30,11 @@ def crossover(parent1, parent2):
     else:
         child[:, :crossover_point] = parent2[:, :crossover_point]
 
-    return child
+    return child  # Returning the cube data (a numpy array)
 
 def mutate(cube):
     """
-    Perform mutation by swapping two random elements in the cube.
+    Perform mutation by swapping two random elements in the cube (numpy array).
     """
     size = cube.shape[0]
     pos1 = tuple(random.randint(0, size - 1) for _ in range(3))
@@ -99,12 +45,23 @@ def mutate(cube):
     
     return cube
 
-def genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutation_rate=0.1, elitism=True):
+def genetic_algorithm(magic_cube, population_size=100, generations=1000, mutation_rate=0.1, elitism=True):
     """
     Solve the magic cube using a genetic algorithm.
+    
+    Parameters:
+    - magic_cube: An instance of the MagicCube class passed as an argument.
+    - population_size: Number of cubes in each generation.
+    - generations: Maximum number of generations to run the algorithm.
+    - mutation_rate: Probability of mutation.
+    - elitism: If True, carry over the best solution to the next generation.
+    
+    Return Codes:
+    - 0: Solution found successfully.
+    - 1: Solution not found within the given generations.
     """
-    magic_number = (cube_size * (cube_size**3 + 1)) // 2
-    population = create_initial_population(cube_size, population_size)
+    # Initialize the population using the cube passed in (as numpy arrays)
+    population = [magic_cube.cube.copy() for _ in range(population_size)]
     best_cube = None
     best_fitness = float('inf')
 
@@ -112,7 +69,8 @@ def genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutati
     fitness_progress = []
 
     for generation in range(generations):
-        fitness_scores = [calculate_fitness(cube, magic_number) for cube in population]
+        # Calculate the fitness for each cube in the population
+        fitness_scores = [magic_cube.calculate_cost() for magic_cube.cube in population]
         
         # Find the best solution in the current population
         min_fitness = min(fitness_scores)
@@ -129,7 +87,7 @@ def genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutati
             print(f"Solution found in generation {generation}")
             print("Best solution found:")
             print(best_cube)
-            break
+            return 0  # Solution found
         
         new_population = []
         
@@ -160,7 +118,6 @@ def genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutati
     plt.show()
 
     print("Solution not found within the given generations.")
-    print("Best solution found:")
+    print(f"Best solution found with fitness {best_fitness}:")
     print(best_cube)
-    print(f"Total Cost: {best_fitness}")
-    return best_cube
+    return 1  # Solution not found within the given generations
