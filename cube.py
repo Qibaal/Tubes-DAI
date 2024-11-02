@@ -16,15 +16,23 @@ class MagicCube:
         """
         self.size = size
         if cube_data is not None:
-            self.cube = np.array(cube_data).reshape((size, size, size))  # Convert cube_data to a 3D numpy array
+            self.cube = np.array(cube_data).reshape((size, size, size))
         else:
-            # Generate a list of numbers from 1 to size^3 and shuffle them to fill the cube
             numbers = list(range(1, size**3 + 1))
             np.random.shuffle(numbers)
             self.cube = np.array(numbers).reshape((size, size, size))
         
-        # Calculate the magic number for a magic cube of this size
         self.magic_number = self.calculate_magic_number()
+        
+        # Define weights for different types of sums
+        self.weights = {
+            'rows': 1.0,          # Basic weight for rows
+            'columns': 1.0,       # Basic weight for columns
+            'pillars': 1.2,       # Slightly higher weight for pillars (vertical lines)
+            'level_diagonals': 1.5,  # Higher weight for diagonals within each level
+            'space_diagonals': 2.0,  # Highest weight for space diagonals
+            'deviation_penalty': 0.1  # Additional penalty for large deviations
+        }
 
     def calculate_magic_number(self):
         """
@@ -33,58 +41,112 @@ class MagicCube:
         """
         return (self.size * (self.size**3 + 1)) // 2
 
-    def display(self):
-        """
-        Displays the current cube configuration.
-        """
-        print("Cube:")
-        print(self.cube)
-
     def calculate_cost(self):
         """
-        Objective function that calculates the total cost based on the deviations from the magic number.
-        The cost is the sum of absolute differences for rows, columns, pillars, and diagonals.
+        Enhanced objective function that calculates the weighted total cost based on the deviations 
+        from the magic number. Different weights are applied to different types of sums, and additional
+        penalties are added for large deviations.
         """
         cost = 0
         
         # Cost for rows
+        row_costs = []
         for level in range(self.size):
             for row in range(self.size):
                 row_sum = self.cube[level, row, :].sum()
-                cost += abs(row_sum - self.magic_number)
+                deviation = abs(row_sum - self.magic_number)
+                row_costs.append(deviation)
+                cost += self.weights['rows'] * deviation
+                # Add extra penalty for large deviations
+                if deviation > self.magic_number * 0.2:  # If deviation is more than 20% of magic number
+                    cost += self.weights['deviation_penalty'] * deviation
         
         # Cost for columns
+        column_costs = []
         for level in range(self.size):
             for col in range(self.size):
                 col_sum = self.cube[level, :, col].sum()
-                cost += abs(col_sum - self.magic_number)
+                deviation = abs(col_sum - self.magic_number)
+                column_costs.append(deviation)
+                cost += self.weights['columns'] * deviation
+                if deviation > self.magic_number * 0.2:
+                    cost += self.weights['deviation_penalty'] * deviation
         
         # Cost for pillars (z-axis)
+        pillar_costs = []
         for row in range(self.size):
             for col in range(self.size):
                 pillar_sum = self.cube[:, row, col].sum()
-                cost += abs(pillar_sum - self.magic_number)
+                deviation = abs(pillar_sum - self.magic_number)
+                pillar_costs.append(deviation)
+                cost += self.weights['pillars'] * deviation
+                if deviation > self.magic_number * 0.2:
+                    cost += self.weights['deviation_penalty'] * deviation
         
         # Cost for main diagonals on each level
+        level_diagonal_costs = []
         for level in range(self.size):
-            diag1_sum = np.trace(self.cube[level])  # Left-to-right diagonal
-            diag2_sum = np.trace(np.fliplr(self.cube[level]))  # Right-to-left diagonal
-            cost += abs(diag1_sum - self.magic_number)
-            cost += abs(diag2_sum - self.magic_number)
+            # Left-to-right diagonal
+            diag1_sum = np.trace(self.cube[level])
+            deviation1 = abs(diag1_sum - self.magic_number)
+            level_diagonal_costs.append(deviation1)
+            cost += self.weights['level_diagonals'] * deviation1
+            
+            # Right-to-left diagonal
+            diag2_sum = np.trace(np.fliplr(self.cube[level]))
+            deviation2 = abs(diag2_sum - self.magic_number)
+            level_diagonal_costs.append(deviation2)
+            cost += self.weights['level_diagonals'] * deviation2
+            
+            # Extra penalty for diagonal deviations
+            if deviation1 > self.magic_number * 0.15:  # Lower threshold for diagonals
+                cost += self.weights['deviation_penalty'] * deviation1 * 1.5
+            if deviation2 > self.magic_number * 0.15:
+                cost += self.weights['deviation_penalty'] * deviation2 * 1.5
         
         # Cost for space diagonals (through all levels)
-        diag1 = sum(self.cube[i, i, i] for i in range(self.size))  # Top-left to bottom-right
-        diag2 = sum(self.cube[i, i, self.size - i - 1] for i in range(self.size))  # Top-right to bottom-left
-        diag3 = sum(self.cube[i, self.size - i - 1, i] for i in range(self.size))  # Bottom-left to top-right
-        diag4 = sum(self.cube[i, self.size - i - 1, self.size - i - 1] for i in range(self.size))  # Bottom-right to top-left
-        cost += abs(diag1 - self.magic_number)
-        cost += abs(diag2 - self.magic_number)
-        cost += abs(diag3 - self.magic_number)
-        cost += abs(diag4 - self.magic_number)
-
+        space_diagonal_costs = []
+        # Top-left to bottom-right
+        diag1 = sum(self.cube[i, i, i] for i in range(self.size))
+        deviation1 = abs(diag1 - self.magic_number)
+        space_diagonal_costs.append(deviation1)
+        cost += self.weights['space_diagonals'] * deviation1
+        
+        # Top-right to bottom-left
+        diag2 = sum(self.cube[i, i, self.size - i - 1] for i in range(self.size))
+        deviation2 = abs(diag2 - self.magic_number)
+        space_diagonal_costs.append(deviation2)
+        cost += self.weights['space_diagonals'] * deviation2
+        
+        # Bottom-left to top-right
+        diag3 = sum(self.cube[i, self.size - i - 1, i] for i in range(self.size))
+        deviation3 = abs(diag3 - self.magic_number)
+        space_diagonal_costs.append(deviation3)
+        cost += self.weights['space_diagonals'] * deviation3
+        
+        # Bottom-right to top-left
+        diag4 = sum(self.cube[i, self.size - i - 1, self.size - i - 1] for i in range(self.size))
+        deviation4 = abs(diag4 - self.magic_number)
+        space_diagonal_costs.append(deviation4)
+        cost += self.weights['space_diagonals'] * deviation4
+        
+        # Extra penalty for space diagonal deviations
+        for deviation in space_diagonal_costs:
+            if deviation > self.magic_number * 0.1:  # Even lower threshold for space diagonals
+                cost += self.weights['deviation_penalty'] * deviation * 2
+        
+        # Add a balance penalty if the distribution of costs is very uneven
+        cost_std = np.std(row_costs + column_costs + pillar_costs + 
+                         level_diagonal_costs + space_diagonal_costs)
+        cost += cost_std * 0.5  # Penalty for high variance in costs
+        
         return cost
-    
+
     def calculate_actual_cost(self):
+        """
+        Calculates the actual number of constraint violations (unweighted).
+        This is useful for tracking actual progress.
+        """
         cost = 0
         
         # Cost for rows
@@ -99,24 +161,24 @@ class MagicCube:
                 col_sum = self.cube[level, :, col].sum()
                 cost += col_sum != self.magic_number
         
-        # Cost for pillars (z-axis)
+        # Cost for pillars
         for row in range(self.size):
             for col in range(self.size):
                 pillar_sum = self.cube[:, row, col].sum()
                 cost += pillar_sum != self.magic_number
         
-        # Cost for main diagonals on each level
+        # Cost for level diagonals
         for level in range(self.size):
-            diag1_sum = np.trace(self.cube[level])  # Left-to-right diagonal
-            diag2_sum = np.trace(np.fliplr(self.cube[level]))  # Right-to-left diagonal
+            diag1_sum = np.trace(self.cube[level])
+            diag2_sum = np.trace(np.fliplr(self.cube[level]))
             cost += diag1_sum != self.magic_number
             cost += diag2_sum != self.magic_number
         
-        # Cost for space diagonals (through all levels)
-        diag1 = sum(self.cube[i, i, i] for i in range(self.size))  # Top-left to bottom-right
-        diag2 = sum(self.cube[i, i, self.size - i - 1] for i in range(self.size))  # Top-right to bottom-left
-        diag3 = sum(self.cube[i, self.size - i - 1, i] for i in range(self.size))  # Bottom-left to top-right
-        diag4 = sum(self.cube[i, self.size - i - 1, self.size - i - 1] for i in range(self.size))  # Bottom-right to top-left
+        # Cost for space diagonals
+        diag1 = sum(self.cube[i, i, i] for i in range(self.size))
+        diag2 = sum(self.cube[i, i, self.size - i - 1] for i in range(self.size))
+        diag3 = sum(self.cube[i, self.size - i - 1, i] for i in range(self.size))
+        diag4 = sum(self.cube[i, self.size - i - 1, self.size - i - 1] for i in range(self.size))
         cost += diag1 != self.magic_number
         cost += diag2 != self.magic_number
         cost += diag3 != self.magic_number
@@ -124,12 +186,21 @@ class MagicCube:
 
         return cost
 
+    def display(self):
+        """
+        Displays the current cube configuration.
+        """
+        print("Cube:")
+        print(self.cube)
+
     def display_cost(self):
         """
-        Displays the current total cost.
+        Displays both the weighted cost and actual constraint violations.
         """
-        cost = self.calculate_cost()
-        print(f"Total Cost: {cost}")
+        weighted_cost = self.calculate_cost()
+        actual_violations = self.calculate_actual_cost()
+        print(f"Weighted Cost: {weighted_cost}")
+        print(f"Actual Constraint Violations: {actual_violations}")
 
 # Test the implementation with sample cube data
 cube_data = [
@@ -164,4 +235,7 @@ elif com ==  "s":
 elif com == "sa":
     simulated_annealing(magic_cube)
 elif com == "g":
-    genetic_algorithm(cube_size=5, population_size=100, generations=1000, mutation_rate=0.1, elitism=True)
+    genetic_algorithm(magic_cube, population_size=100, generations=2000, mutation_rate=0.1, elitism=True)
+
+# Display the cost of the current cube configuration
+magic_cube.display_cost()
