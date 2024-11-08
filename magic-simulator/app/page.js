@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import TWEEN from "@tweenjs/tween.js";
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export default function Home() {
   const mountRef = useRef(null);
