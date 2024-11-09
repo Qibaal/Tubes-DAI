@@ -1,49 +1,57 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
-import TWEEN from "@tweenjs/tween.js";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+"use client"; // This enables server-side rendering for the component
+
+import { useEffect, useRef, useState } from "react"; // React hooks for state management and DOM references
+import * as THREE from "three"; // Three.js library for 3D rendering
+import TWEEN from "@tweenjs/tween.js"; // Library for animation tweening
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"; // Module for mouse controls in Three.js
 
 export default function Home() {
+  // Create references for DOM element and camera
   const mountRef = useRef(null);
-  const cameraRef = useRef(null); // Create a ref for the camera
-  const [selectedCubes, setSelectedCubes] = useState([]);
-  // const [scene, setScene] = useState(null);
-  const [cubes, setCubes] = useState([]);
-  const [positions, setPositions] = useState({
+  const cameraRef = useRef(null);
+  const [selectedCubes, setSelectedCubes] = useState([]); // State for storing selected cubes
+  const [cubes, setCubes] = useState([]); // State for storing cube data
+  const [positions, setPositions] = useState({ // State for storing user-input positions for swapping
     first: { x: "", y: "", z: "" },
     second: { x: "", y: "", z: "" },
   });
 
   useEffect(() => {
     if (!mountRef.current) return;
-
+  
+    // Initialize scene, camera, and renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
+      75, // Field of view
+      window.innerWidth / window.innerHeight, // Aspect ratio
+      0.1, // Near clipping plane
+      1000 // Far clipping plane
     );
-    cameraRef.current = camera; // Assign the camera to the ref
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    mountRef.current.appendChild(renderer.domElement);
-
-    // Camera position
+    cameraRef.current = camera; // Store the camera in the ref
+  
+    const renderer = new THREE.WebGLRenderer({ antialias: true }); // Renderer with anti-aliasing
+    renderer.setSize(window.innerWidth, window.innerHeight); // Set renderer size
+    mountRef.current.appendChild(renderer.domElement); // Append renderer to the DOM
+  
+    // Set initial camera position and orientation
     camera.position.set(10, 10, 10);
     camera.lookAt(0, 0, 0);
-
-    // Controls
+  
+    // Enable orbit controls
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-
-    // Create cubes
+    controls.enableDamping = true; // Enable damping for smoother controls
+  
+    // Add an AxesHelper to the scene
+    const axesHelper = new THREE.AxesHelper(5); // Length of each axis line
+    scene.add(axesHelper);
+  
+    // Variables for cube properties
     const cubeSize = 1;
     const spacing = 1.2;
     const cubesData = [];
     let number = 1;
-
+  
+    // Nested loop to create a 5x5x5 grid of cubes
     for (let x = 0; x < 5; x++) {
       for (let y = 0; y < 5; y++) {
         for (let z = 0; z < 5; z++) {
@@ -53,7 +61,7 @@ export default function Home() {
             transparent: true,
             opacity: 0.8,
           });
-
+  
           const cube = new THREE.Mesh(geometry, material);
           const position = new THREE.Vector3(
             (x - 2) * spacing,
@@ -61,8 +69,8 @@ export default function Home() {
             (z - 2) * spacing
           );
           cube.position.copy(position);
-
-          // Add number as texture
+  
+          // Create and apply texture with the cube number
           const canvas = document.createElement("canvas");
           canvas.width = 128;
           canvas.height = 128;
@@ -74,21 +82,20 @@ export default function Home() {
             context.textBaseline = "middle";
             context.fillText(number.toString(), 64, 64);
           }
-
+  
           const texture = new THREE.CanvasTexture(canvas);
           const textMaterial = new THREE.MeshBasicMaterial({
             map: texture,
             transparent: true,
           });
-
+  
           const textMesh = new THREE.Mesh(
             new THREE.PlaneGeometry(cubeSize * 0.8, cubeSize * 0.8),
             textMaterial
           );
           textMesh.position.z = cubeSize / 2 + 0.01;
           cube.add(textMesh);
-
-          // Add cube data
+  
           cubesData.push({
             number,
             position: position.clone(),
@@ -99,10 +106,9 @@ export default function Home() {
         }
       }
     }
-
-    setCubes(cubesData);
-    // setScene(scene);
-
+  
+    setCubes(cubesData); // Store generated cubes in state
+  
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
@@ -110,74 +116,17 @@ export default function Home() {
       TWEEN.update();
       renderer.render(scene, camera);
     };
-    animate();
-
-    // Cleanup
+    animate(); // Start animation loop
+  
+    // Cleanup function to remove renderer on component unmount
     return () => {
       mountRef.current?.removeChild(renderer.domElement);
-      renderer.dispose();
+      renderer.dispose(); // Dispose of renderer resources
     };
   }, []);
+  
 
-  // const handleCubeClick = (event) => {
-  //   if (!scene || !cameraRef.current) return;
-
-  //   const raycaster = new THREE.Raycaster();
-  //   const mouse = new THREE.Vector2(
-  //     (event.clientX / window.innerWidth) * 2 - 1,
-  //     -(event.clientY / window.innerHeight) * 2 + 1
-  //   );
-
-  //   raycaster.setFromCamera(mouse, cameraRef.current);
-  //   const intersects = raycaster.intersectObjects(scene.children, true);
-
-  //   if (intersects.length > 0) {
-  //     const clickedCube = intersects[0].object;
-  //     const cubeData = cubes.find((cube) => cube.mesh === clickedCube);
-
-  //     if (cubeData) {
-  //       setSelectedCubes((prev) => {
-  //         if (prev.length === 2) return [cubeData.number];
-  //         return [...prev, cubeData.number];
-  //       });
-
-  //       if (selectedCubes.length === 1) {
-  //         // Animate cube switch
-  //         const cube1 = cubes.find((c) => c.number === selectedCubes[0]);
-  //         const cube2 = cubeData;
-
-  //         if (cube1 && cube2.mesh && cube1.mesh) {
-  //           const position1 = cube1.position.clone();
-  //           const position2 = cube2.position.clone();
-
-  //           new TWEEN.Tween(cube1.mesh.position)
-  //             .to(position2, 1000)
-  //             .easing(TWEEN.Easing.Quadratic.InOut)
-  //             .start();
-
-  //           new TWEEN.Tween(cube2.mesh.position)
-  //             .to(position1, 1000)
-  //             .easing(TWEEN.Easing.Quadratic.InOut)
-  //             .start();
-
-  //           // Update positions in state
-  //           setCubes((prev) =>
-  //             prev.map((c) => {
-  //               if (c.number === cube1.number) {
-  //                 return { ...c, position: position2 };
-  //               }
-  //               if (c.number === cube2.number) {
-  //                 return { ...c, position: position1 };
-  //               }
-  //               return c;
-  //             })
-  //           );
-  //         }
-  //       }
-  //     }
-  //   }
-  // };
-
+  // Handle user input for cube positions
   const handlePositionChange = (e, cubeIndex) => {
     const { name, value } = e.target;
     setPositions((prev) => ({
@@ -186,12 +135,13 @@ export default function Home() {
     }));
   };
 
+  // Handle cube position swapping
   const handlePositionSwap = () => {
     const { first, second } = positions;
-    console.log(first)
-    console.log(second)
+    console.log(first);
+    console.log(second);
 
-    // Find cubes based on their positions
+    // Find cubes based on provided positions
     const firstCube = cubes.find(
       (c) =>
         c.position.x === parseFloat(first.x) &&
@@ -210,10 +160,10 @@ export default function Home() {
       const pos1 = firstCube.position.clone();
       const pos2 = secondCube.position.clone();
 
-      // Animate the swap
+      // Animate position swap between two cubes
       new TWEEN.Tween(firstCube.mesh.position)
-        .to(pos2, 1000)
-        .easing(TWEEN.Easing.Quadratic.InOut)
+        .to(pos2, 1000) // Duration of 1 second
+        .easing(TWEEN.Easing.Quadratic.InOut) // Easing function for smooth animation
         .start();
 
       new TWEEN.Tween(secondCube.mesh.position)
@@ -236,17 +186,12 @@ export default function Home() {
     }
   };
 
-  // useEffect(() => {
-  //   window.addEventListener("click", handleCubeClick);
-  //   return () => window.removeEventListener("click", handleCubeClick);
-  // }, [scene, selectedCubes]);
-
   return (
     <main className="min-h-screen flex flex-row ">
-      {/* Description */}
-      {/* Cube */}
+      {/* User interface for position input and swap */}
       <section className="flex flex-col bg-gray-700">
         <div>
+          {/* Input fields for the first cube's position */}
           <h3>First Cube Position</h3>
           <input
             type="number"
@@ -270,6 +215,7 @@ export default function Home() {
             onChange={(e) => handlePositionChange(e, "first")}
           />
 
+          {/* Input fields for the second cube's position */}
           <h3>Second Cube Position</h3>
           <input
             type="number"
@@ -293,10 +239,11 @@ export default function Home() {
             onChange={(e) => handlePositionChange(e, "second")}
           />
 
+          {/* Button to trigger the cube swap */}
           <button onClick={handlePositionSwap}>Swap Cubes</button>
         </div>
 
-        <div ref={mountRef} />
+        <div ref={mountRef} /> {/* Container for 3D scene */}
       </section>
     </main>
   );
