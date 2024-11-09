@@ -1,11 +1,12 @@
-"use client";
+"use client"
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import TWEEN from "@tweenjs/tween.js";
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 export default function Home() {
   const mountRef = useRef(null);
+  const cameraRef = useRef(null); // Create a ref for the camera
   const [selectedCubes, setSelectedCubes] = useState([]);
   const [scene, setScene] = useState(null);
   const [cubes, setCubes] = useState([]);
@@ -21,6 +22,7 @@ export default function Home() {
       0.1,
       1000
     );
+    cameraRef.current = camera; // Assign the camera to the ref
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     mountRef.current.appendChild(renderer.domElement);
@@ -28,13 +30,6 @@ export default function Home() {
     // Camera position
     camera.position.set(10, 10, 10);
     camera.lookAt(0, 0, 0);
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(10, 10, 10);
-    scene.add(directionalLight);
 
     // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -122,7 +117,7 @@ export default function Home() {
   }, []);
 
   const handleCubeClick = (event) => {
-    if (!scene) return;
+    if (!scene || !cameraRef.current) return;
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2(
@@ -130,7 +125,7 @@ export default function Home() {
       -(event.clientY / window.innerHeight) * 2 + 1
     );
 
-    raycaster.setFromCamera(mouse, scene.children[0]);
+    raycaster.setFromCamera(mouse, cameraRef.current); // Use camera from the ref
     const intersects = raycaster.intersectObjects(scene.children, true);
 
     if (intersects.length > 0) {
@@ -181,32 +176,22 @@ export default function Home() {
   };
 
   useEffect(() => {
-    window.addEventListener('click', handleCubeClick);
-    return () => window.removeEventListener('click', handleCubeClick);
+    window.addEventListener("click", handleCubeClick);
+    return () => window.removeEventListener("click", handleCubeClick);
   }, [scene, selectedCubes]);
 
   return (
     <main className="min-h-screen flex flex-row text-white">
       {/* Description */}
-      <section className="w-1/3 bg-gray-800">left</section>
       {/* Cube */}
-      <section className="w-2/3 bg-gray-700">
-      <div ref={mountRef} style={{ width: '100vw', height: '100vh' }} />
-      <div
-        style={{
-          position: 'absolute',
-          top: 20,
-          left: 20,
-          color: 'white',
-          background: 'rgba(0,0,0,0.7)',
-          padding: '10px',
-        }}
-      >
-        Click two cubes to switch their positions
-        {selectedCubes.length > 0 && (
-          <div>Selected: {selectedCubes.join(', ')}</div>
-        )}
-      </div>
+      <section className="flex flex-col bg-gray-700">
+        <div className="text-white">
+          Click two cubes to switch their positions
+          {selectedCubes.length > 0 && (
+            <div>Selected: {selectedCubes.join(", ")}</div>
+          )}
+        </div>
+        <div ref={mountRef} />
       </section>
     </main>
   );
