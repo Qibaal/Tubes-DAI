@@ -70,11 +70,14 @@ export default function Home() {
       for (let y = 0; y < 5; y++) {
         for (let z = 0; z < 5; z++) {
           const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+    
+          // Change material to transparent and hide the mesh
           const material = new THREE.MeshPhongMaterial({
             color: 0x00ff00,
-            transparent: false, // Changed to false to remove translucency
+            transparent: true,
+            opacity: 0, // Set opacity to 0 to make cube invisible
           });
-
+    
           const cube = new THREE.Mesh(geometry, material);
           const position = new THREE.Vector3(
             (x - 2) * spacing,
@@ -82,7 +85,7 @@ export default function Home() {
             (z - 2) * spacing
           );
           cube.position.copy(position);
-
+    
           // Create sprite for number (always faces camera)
           const numberTexture = createNumberTexture(number);
           const spriteMaterial = new THREE.SpriteMaterial({
@@ -92,22 +95,23 @@ export default function Home() {
           const sprite = new THREE.Sprite(spriteMaterial);
           sprite.scale.set(0.15, 0.15, 1); // Adjust size of number
           sprite.position.copy(position);
-
+    
           // Add cube data with coordinates
           cubesData.push({
             number,
             position: position.clone(),
-            mesh: cube,
+            mesh: cube, // still needed to keep track
             numberMesh: sprite,
             coordinates: { x, y, z },
           });
-
-          scene.add(cube);
+    
+          // Only add the sprite to the scene (omit adding the cube)
           scene.add(sprite);
           number++;
         }
       }
     }
+    
 
     setCubes(cubesData);
     setScene(scene);
