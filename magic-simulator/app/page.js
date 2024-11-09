@@ -46,8 +46,8 @@ export default function Home() {
     const axesHelper = new THREE.AxesHelper(5);
     scene.add(axesHelper);
 
-    const cubeSize = 1;
-    const spacing = 1.2;
+    const cubeSize = 1.3;
+    const spacing = 3;
     const cubesData = [];
     let number = 1;
 
@@ -66,48 +66,45 @@ export default function Home() {
       return new THREE.CanvasTexture(canvas);
     };
 
+
     for (let x = 0; x < 5; x++) {
       for (let y = 0; y < 5; y++) {
         for (let z = 0; z < 5; z++) {
           const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-          const material = new THREE.MeshPhongMaterial({
-            color: 0x00ff00,
-            transparent: false, // Changed to false to remove translucency
+          const edgesGeometry = new THREE.EdgesGeometry(geometry);
+
+          // Create material for the edges with lower opacity
+          const edgesMaterial = new THREE.LineBasicMaterial({
+            color: 0x00ff00, // Green color for the outline
+            transparent: true, // Enable transparency
+            opacity: 0.35, // Set the opacity (0 is fully transparent, 1 is fully opaque)
           });
 
-          const cube = new THREE.Mesh(geometry, material);
-          const position = new THREE.Vector3(
-            (x - 2) * spacing,
-            (y - 2) * spacing,
-            (z - 2) * spacing
-          );
-          cube.position.copy(position);
+          // Create the edges mesh and add it to the scene
+          const edges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
+          edges.position.set((x - 2) * spacing, (y - 2) * spacing, (z - 2) * spacing);
+          scene.add(edges);
 
-          // Create sprite for number (always faces camera)
+          // Create and position the number sprite
           const numberTexture = createNumberTexture(number);
           const spriteMaterial = new THREE.SpriteMaterial({
             map: numberTexture,
-            sizeAttenuation: false, // This makes the sprite size consistent regardless of distance
+            sizeAttenuation: false,
           });
           const sprite = new THREE.Sprite(spriteMaterial);
-          sprite.scale.set(0.15, 0.15, 1); // Adjust size of number
-          sprite.position.copy(position);
+          sprite.scale.set(0.15, 0.15, 1);
+          sprite.position.set((x - 2) * spacing, (y - 2) * spacing, (z - 2) * spacing);
 
-          // Add cube data with coordinates
-          cubesData.push({
-            number,
-            position: position.clone(),
-            mesh: cube,
-            numberMesh: sprite,
-            coordinates: { x, y, z },
-          });
-
-          scene.add(cube);
           scene.add(sprite);
           number++;
         }
       }
     }
+
+
+
+
+    
 
     setCubes(cubesData);
     setScene(scene);
