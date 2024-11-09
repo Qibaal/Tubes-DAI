@@ -1,5 +1,6 @@
 import numpy as np
-from algorithms.steepestascenthc import steepest_ascent_hill_climbing  # Import the steepest ascent hill-climbing function
+import time
+from algorithms.steepestascenthc import steepest_ascent_hill_climbing
 from algorithms.sidewaysmovehc import hill_climbing_with_sideways_move
 from algorithms.randomrestarthc import random_restart_hill_climbing
 from algorithms.stochastichc import stochastic_hill_climbing  # Import the stochastic hill-climbing function
@@ -8,12 +9,6 @@ from algorithms.genetic import genetic_algorithm  # Import the genetic algorithm
 
 class MagicCube:
     def __init__(self, cube_data=None, size=5):
-        """
-        Initializes the MagicCube instance with either provided cube_data or generates a random cube.
-        Arguments:
-        - cube_data: A 3D array of size^3 elements. If None, a shuffled cube is generated.
-        - size: The size of the cube, default is 5.
-        """
         self.size = size
         if cube_data is not None:
             self.cube = np.array(cube_data).reshape((size, size, size))
@@ -218,6 +213,7 @@ cube_data = [
 
 # Initialize the magic cube with the provided cube data
 magic_cube = MagicCube()
+initial_cost = magic_cube.calculate_cost()
 
 # Display the cost of the current cube configuration
 magic_cube.display_cost()
@@ -225,7 +221,28 @@ magic_cube.display_cost()
 com = input("Masukkan algo: ")
 
 if com == "sac":
-    steepest_ascent_hill_climbing(magic_cube)
+    # Record the start time
+    start_time = time.time()
+
+    # Call the steepest_ascent_hill_climbing function
+    final_cost, final_cube = steepest_ascent_hill_climbing(magic_cube)
+
+    # Record the end time
+    end_time = time.time()
+
+    # Calculate the elapsed time
+    elapsed_time = end_time - start_time
+
+    # Print the elapsed time
+    print(f"Execution time: {elapsed_time} seconds")
+    data = {
+        "initial_cost": initial_cost,
+        "final_cost": final_cost,
+        "initial_cube": magic_cube.cube,
+        "final_cube": final_cube,
+        "time": elapsed_time
+    }
+    print(data)
 elif com == "sm":
     max_sideways_moves=1000
     hill_climbing_with_sideways_move(magic_cube, max_sideways_moves, max_iterations=1000)
@@ -250,6 +267,3 @@ elif com == "g":
         for i in range(3): 
             print(f"Iterasi ke-{i+1} dengan Generasi {gen_count}")
             genetic_algorithm(magic_cube, population_size=100, generations=gen_count, mutation_rate=0.1, elitism=True)
-
-# Display the cost of the current cube configuration
-magic_cube.display_cost()
