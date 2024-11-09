@@ -227,15 +227,29 @@ com = input("Masukkan algo: ")
 if com == "sac":
     steepest_ascent_hill_climbing(magic_cube)
 elif com == "sm":
-    hill_climbing_with_sideways_move(magic_cube, max_sideways_moves=1000, max_iterations=1000)
+    max_sideways_moves=1000
+    hill_climbing_with_sideways_move(magic_cube, max_sideways_moves, max_iterations=1000)
 elif com == "rr":
-    random_restart_hill_climbing(magic_cube)
+    max_restarts=10
+    random_restart_hill_climbing(magic_cube, max_restarts)
 elif com ==  "s":
     stochastic_hill_climbing(magic_cube) 
 elif com == "sa":
     simulated_annealing(magic_cube)
 elif com == "g":
-    genetic_algorithm(magic_cube, population_size=100, generations=2000, mutation_rate=0.1, elitism=True)
+    # Kontrol jumlah populasi
+    for pop_size in [50, 100, 150]:  # Variasi jumlah populasi
+        print(f"Kontrol Jumlah Populasi: Populasi = {pop_size}\n")
+        for i in range(3):  
+            print(f"Iterasi ke-{i+1} dengan Populasi {pop_size}")
+            genetic_algorithm(magic_cube, population_size=pop_size, generations=2000, mutation_rate=0.1, elitism=True)
+
+    # Kontrol banyak iterasi
+    for gen_count in [1000, 2000, 3000]:  # Variasi banyak iterasi
+        print(f"Kontrol Banyak Iterasi: Iterasi = {gen_count}\n")
+        for i in range(3): 
+            print(f"Iterasi ke-{i+1} dengan Generasi {gen_count}")
+            genetic_algorithm(magic_cube, population_size=100, generations=gen_count, mutation_rate=0.1, elitism=True)
 
 # Display the cost of the current cube configuration
 magic_cube.display_cost()
