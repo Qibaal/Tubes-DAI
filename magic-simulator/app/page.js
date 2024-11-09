@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import * as THREE from "three"; 
+import * as THREE from "three";
 import TWEEN from "@tweenjs/tween.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 export default function Home() {
   const mountRef = useRef(null);
   const cameraRef = useRef(null);
-  const [selectedCubes, setSelectedCubes] = useState([]); 
+  const [scene, setScene] = useState(null);
   const [cubes, setCubes] = useState([]);
   const [positions, setPositions] = useState({
     first: { x: "", y: "", z: "" },
@@ -23,27 +23,48 @@ export default function Home() {
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000 
+      1000
     );
-    cameraRef.current = camera;
-  
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    mountRef.current.appendChild(renderer.domElement); 
+    mountRef.current.appendChild(renderer.domElement);
 
+    // Camera position
     camera.position.set(10, 10, 10);
     camera.lookAt(0, 0, 0);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(10, 10, 10);
+    scene.add(directionalLight);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
 
-    const axesHelper = new THREE.AxesHelper(5); 
+    const axesHelper = new THREE.AxesHelper(5);
     scene.add(axesHelper);
 
     const cubeSize = 1;
     const spacing = 1.2;
-    const blocksData = [];
+    const cubesData = [];
     let number = 1;
+
+    const createNumberTexture = (number) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 128;
+      canvas.height = 128;
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.fillStyle = "white";
+        context.font = "bold 64px Arial";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText(number.toString(), 64, 64);
+      }
+      return new THREE.CanvasTexture(canvas);
+    };
 
     for (let x = 0; x < 5; x++) {
       for (let y = 0; y < 5; y++) {
@@ -51,10 +72,9 @@ export default function Home() {
           const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
           const material = new THREE.MeshPhongMaterial({
             color: 0x00ff00,
-            transparent: true,
-            opacity: 0.8,
+            transparent: false, // Changed to false to remove translucency
           });
-  
+
           const cube = new THREE.Mesh(geometry, material);
           const position = new THREE.Vector3(
             (x - 2) * spacing,
@@ -63,48 +83,35 @@ export default function Home() {
           );
           cube.position.copy(position);
 
-          const canvas = document.createElement("canvas");
-          canvas.width = 128;
-          canvas.height = 128;
-          const context = canvas.getContext("2d");
-          if (context) {
-            context.fillStyle = "white";
-            context.font = "bold 64px Arial";
-            context.textAlign = "center";
-            context.textBaseline = "middle";
-            context.fillText(number.toString(), 64, 64);
-          }
-  
-          const texture = new THREE.CanvasTexture(canvas);
-          const textMaterial = new THREE.MeshBasicMaterial({
-            map: texture,
-            transparent: true,
+          // Create sprite for number (always faces camera)
+          const numberTexture = createNumberTexture(number);
+          const spriteMaterial = new THREE.SpriteMaterial({
+            map: numberTexture,
+            sizeAttenuation: false, // This makes the sprite size consistent regardless of distance
           });
-  
-          const textMesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(cubeSize * 0.8, cubeSize * 0.8),
-            textMaterial
-          );
-          textMesh.position.z = cubeSize / 2 + 0.01;
-          cube.add(textMesh);
+          const sprite = new THREE.Sprite(spriteMaterial);
+          sprite.scale.set(0.15, 0.15, 1); // Adjust size of number
+          sprite.position.copy(position);
 
-          const block = {
-            xCor: (x - 2) * spacing,
-            yCor: (y - 2) * spacing,
-            zCor: (z - 2) * spacing,
-            blockValue: number,
+          // Add cube data with coordinates
+          cubesData.push({
+            number,
+            position: position.clone(),
             mesh: cube,
-          };
-  
-          blocksData.push(block);
+            numberMesh: sprite,
+            coordinates: { x, y, z },
+          });
+
           scene.add(cube);
+          scene.add(sprite);
           number++;
         }
       }
     }
-  
-    setCubes(blocksData);
-  
+
+    setCubes(cubesData);
+    setScene(scene);
+
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -112,14 +119,13 @@ export default function Home() {
       renderer.render(scene, camera);
     };
     animate();
-  
+
     return () => {
       mountRef.current?.removeChild(renderer.domElement);
       renderer.dispose();
     };
   }, []);
-  
-  
+
   const handlePositionChange = (e, cubeIndex) => {
     const { name, value } = e.target;
     setPositions((prev) => ({
@@ -128,13 +134,12 @@ export default function Home() {
     }));
   };
 
-
   const handlePositionSwap = () => {
     const { first, second } = positions;
-  
+
     const spacing = 1.2;
     const convertToInternal = (value) => (value - 3) * spacing;
-  
+
     const firstX = convertToInternal(parseInt(first.x, 10));
     const firstY = convertToInternal(parseInt(first.y, 10));
     const firstZ = convertToInternal(parseInt(first.z, 10));
@@ -143,17 +148,11 @@ export default function Home() {
     const secondZ = convertToInternal(parseInt(second.z, 10));
 
     const firstCube = cubes.find(
-      (c) =>
-        c.xCor === firstX &&
-        c.yCor === firstY &&
-        c.zCor === firstZ
+      (c) => c.xCor === firstX && c.yCor === firstY && c.zCor === firstZ
     );
-  
+
     const secondCube = cubes.find(
-      (c) =>
-        c.xCor === secondX &&
-        c.yCor === secondY &&
-        c.zCor === secondZ
+      (c) => c.xCor === secondX && c.yCor === secondY && c.zCor === secondZ
     );
 
     if (firstCube && secondCube) {
@@ -177,20 +176,20 @@ export default function Home() {
           context.textBaseline = "middle";
           context.fillText(cube.blockValue.toString(), 64, 64);
         }
-  
+
         const texture = new THREE.CanvasTexture(canvas);
         cube.mesh.children[0].material.map = texture;
         cube.mesh.children[0].material.needsUpdate = true;
       };
-  
+
       updateCubeTexture(firstCube);
       updateCubeTexture(secondCube);
-  
+
       new TWEEN.Tween(firstCube.mesh.position)
         .to(pos2, 1000)
         .easing(TWEEN.Easing.Quadratic.InOut)
         .start();
-  
+
       new TWEEN.Tween(secondCube.mesh.position)
         .to(pos1, 1000)
         .easing(TWEEN.Easing.Quadratic.InOut)
@@ -209,7 +208,6 @@ export default function Home() {
       );
     }
   };
-  
 
   return (
     <main className="min-h-screen flex flex-row ">
@@ -264,7 +262,7 @@ export default function Home() {
           <button onClick={handlePositionSwap}>Swap Cubes</button>
         </div>
 
-        <div ref={mountRef} /> 
+        <div ref={mountRef} />
       </section>
     </main>
   );
