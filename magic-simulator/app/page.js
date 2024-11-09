@@ -47,7 +47,7 @@ export default function Home() {
     scene.add(axesHelper);
 
     const cubeSize = 1.3;
-    const spacing = 8;
+    const spacing = 3;
     const cubesData = [];
     let number = 1;
 
