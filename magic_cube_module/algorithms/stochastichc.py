@@ -61,10 +61,4 @@ def stochastic_hill_climbing(cube, max_iterations=1000):
     plt.grid(True)
     plt.show()
 
-    # Final result after all iterations
-    if current_cost == 0:
-        print(f"Solved the magic cube in {iteration} iterations!")
-        return True
-    else:
-        print(f"Stopped after {iteration} iterations with {current_cost} cost remaining.")
-        return False
+    return current_cost, cube.cube, iteration, cost_progress
