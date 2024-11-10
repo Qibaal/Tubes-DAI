@@ -8,12 +8,15 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 export default function Home() {
   const mountRef = useRef(null);
   const cameraRef = useRef(null);
+  
   const [scene, setScene] = useState(null);
   const [cubes, setCubes] = useState([]);
   const [positions, setPositions] = useState({
     first: { x: "", y: "", z: "" },
     second: { x: "", y: "", z: "" },
   });
+
+  const [isLoading, setIsLoading] = useState(false); 
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -66,7 +69,6 @@ export default function Home() {
       return new THREE.CanvasTexture(canvas);
     };
 
-
     for (let x = 0; x < 5; x++) {
       for (let y = 0; y < 5; y++) {
         for (let z = 0; z < 5; z++) {
@@ -82,7 +84,11 @@ export default function Home() {
 
           // Create the edges mesh and add it to the scene
           const edges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
-          edges.position.set((x - 2) * spacing, (y - 2) * spacing, (z - 2) * spacing);
+          edges.position.set(
+            (x - 2) * spacing,
+            (y - 2) * spacing,
+            (z - 2) * spacing
+          );
           scene.add(edges);
 
           // Create and position the number sprite
@@ -93,18 +99,17 @@ export default function Home() {
           });
           const sprite = new THREE.Sprite(spriteMaterial);
           sprite.scale.set(0.15, 0.15, 1);
-          sprite.position.set((x - 2) * spacing, (y - 2) * spacing, (z - 2) * spacing);
+          sprite.position.set(
+            (x - 2) * spacing,
+            (y - 2) * spacing,
+            (z - 2) * spacing
+          );
 
           scene.add(sprite);
           number++;
         }
       }
     }
-
-
-
-
-    
 
     setCubes(cubesData);
     setScene(scene);
@@ -121,7 +126,7 @@ export default function Home() {
       mountRef.current?.removeChild(renderer.domElement);
       renderer.dispose();
     };
-  }, []);
+  }, [isLoading]);
 
   const handlePositionChange = (e, cubeIndex) => {
     const { name, value } = e.target;
@@ -207,60 +212,52 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-row ">
-      <section className="flex flex-col bg-gray-700">
+    <main className="min-h-screen flex flex-col bg-gray-400">
+      <section className="flex flex-row justify-between py-4">
+        {/* Algo Picking */}
         <div>
-          <h3>First Cube Position</h3>
-          <input
-            type="number"
-            name="x"
-            placeholder="X"
-            value={positions.first.x}
-            onChange={(e) => handlePositionChange(e, "first")}
-          />
-          <input
-            type="number"
-            name="y"
-            placeholder="Y"
-            value={positions.first.y}
-            onChange={(e) => handlePositionChange(e, "first")}
-          />
-          <input
-            type="number"
-            name="z"
-            placeholder="Z"
-            value={positions.first.z}
-            onChange={(e) => handlePositionChange(e, "first")}
-          />
+          <select id="algorithms" name="algorithm_list" form="algorithm_form">
+            <option value="steepest_ascent">Steepest Ascent</option>
+            <option value="stochastic">Stochastic</option>
+            <option value="sideways_move">Sideways Move</option>
+            <option value="random_restart">Random Restart</option>
+            <option value="simulated_annealing">Simulated Annealing</option>
+            <option value="genetic">Genetic</option>
+          </select>
 
-          <h3>Second Cube Position</h3>
-          <input
-            type="number"
-            name="x"
-            placeholder="X"
-            value={positions.second.x}
-            onChange={(e) => handlePositionChange(e, "second")}
-          />
-          <input
-            type="number"
-            name="y"
-            placeholder="Y"
-            value={positions.second.y}
-            onChange={(e) => handlePositionChange(e, "second")}
-          />
-          <input
-            type="number"
-            name="z"
-            placeholder="Z"
-            value={positions.second.z}
-            onChange={(e) => handlePositionChange(e, "second")}
-          />
-
-          <button onClick={handlePositionSwap}>Swap Cubes</button>
+          <button 
+            className="px-8 py-4 bg-blue-500 rounded-xl"
+            onClick={() => setIsLoading(!isLoading)}
+            >
+              Run
+          </button>
         </div>
 
-        <div ref={mountRef} />
+        {/* Information */}
+        <div className="flex flex-row gap-4">
+          <div>
+            <p>Initial Cost</p>
+            <p>7000</p>
+          </div>
+          <div>
+            <p>Best Cost</p>
+            <p>4000</p>
+          </div>
+          <div>
+            <p>Total time</p>
+            <p>32 seconds</p>
+          </div>
+          <button className="bg-red-500">Initial State</button>
+          <button className="bg-blue-500">Final State</button>
+        </div>
       </section>
+
+      {/* Cube */}
+      {isLoading ? (
+        <div className="loader"></div> // Simple loader text
+      ) : (
+        <div ref={mountRef} className={`${isLoading ? "invisible" : ""}`}/>
+      )}
     </main>
   );
 }
