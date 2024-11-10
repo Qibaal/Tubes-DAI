@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import time
 
 # Genetic Algorithm Parameters
 POPULATION_SIZE = 100
@@ -68,33 +69,26 @@ def mutate(individual):
         individual = flat_individual.reshape((CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))
     return individual
 
-# Generating initial population
-population = [create_individual() for _ in range(POPULATION_SIZE)]
+# Genetic algorithm function
+def genetic_algorithm(cube, population_size=POPULATION_SIZE, generations=MAX_GENERATIONS, mutation_rate=MUTATION_RATE, elitism=True):
+    population = [create_individual() for _ in range(population_size)]
 
-# Main loop of the genetic algorithm
-for generation in range(MAX_GENERATIONS):
-    population = sorted(population, key=lambda ind: fitness(ind), reverse=True)
+    for generation in range(generations):
+        population = sorted(population, key=lambda ind: fitness(ind), reverse=True)
 
-    new_population = population[:10]  # Elitism: keep the top 10 individuals
+        new_population = population[:10] if elitism else []  # Elitism: keep the top 10 individuals
 
-    while len(new_population) < POPULATION_SIZE:
-        parent1, parent2 = random.sample(population[:50], 2)  # Tournament selection
-        offspring1, offspring2 = ordered_crossover(parent1.flatten(), parent2.flatten())
-        offspring1 = mutate(offspring1)
-        offspring2 = mutate(offspring2)
-        new_population.extend([offspring1, offspring2])
+        while len(new_population) < population_size:
+            parent1, parent2 = random.sample(population[:50], 2)  # Tournament selection
+            offspring1, offspring2 = ordered_crossover(parent1.flatten(), parent2.flatten())
+            offspring1 = mutate(offspring1)
+            offspring2 = mutate(offspring2)
+            new_population.extend([offspring1, offspring2])
 
-    population = new_population[:POPULATION_SIZE]
+        population = new_population[:population_size]
 
-    # Print best result in each generation
-    best_fitness = fitness(population[0])
-    print(f"Generation {generation}, Best fitness: {best_fitness}")
+        best_fitness = fitness(population[0])
+        if best_fitness == 0:  # Perfect solution found
+            break
 
-    if best_fitness == 0:  # Perfect solution found
-        print("Optimal solution found!")
-        break
-
-# Display the best solution
-best_solution = population[0]
-print("Best solution:")
-print(best_solution)
+    return -best_fitness, population[0], generation, [fitness(ind) for ind in population]
