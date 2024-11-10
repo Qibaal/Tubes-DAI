@@ -1,5 +1,6 @@
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
 from algorithms.steepestascenthc import steepest_ascent_hill_climbing
 from algorithms.sidewaysmovehc import hill_climbing_with_sideways_move
@@ -11,22 +12,29 @@ from algorithms.genetic import genetic_algorithm  # Import the genetic algorithm
 class SearchResults:
     def __init__(self):
         self.initial_cost = []
+        self.initial_cube = []
         self.final_cost = []
-        self.iterations = []
+        self.final_cube = []
+        self.steps = []
         self.duration = []
-        self.obj_values = []
         self.stuck_count = 0
+        self.iterations_per_restart = []  # Add this new field
         
-    def add_run(self, initial_cost, final_cost, iterations, duration, obj_values):
+    def add_run(self, initial_cost, initial_cube, final_cost, final_cube, iterations, duration, steps, iterations_per_restart=None):  # Add parameter
         self.initial_cost.append(initial_cost)
+        self.initial_cube.append(initial_cube.flatten().tolist())
         self.final_cost.append(final_cost)
-        self.iterations.append(iterations)
+        self.final_cube.append(final_cube.flatten().tolist())
+        self.steps.append(steps)
         self.duration.append(duration)
-        self.obj_values.append(obj_values)
+        if iterations_per_restart is not None:  # Add this
+            self.iterations_per_restart.append(iterations_per_restart)
 
 class MagicCubeSearch:
     def __init__(self, size=5):
-        self.cube = MagicCube(size=size)
+        # Generate a single initial cube and store it
+        self.initial_cube_state = MagicCube(size=size).cube
+
         # Initialize results for each algorithm
         self.sac = SearchResults()  # Steepest Ascent
         self.sm = SearchResults()   # Sideways Move
@@ -38,76 +46,69 @@ class MagicCubeSearch:
         self.run_all_searches()
 
     def run_all_searches(self):
-        for i in range(3):
-            # Steepest Ascent
-            print(f"SAC - Run {i+1}")
-            self.run_steepest_ascent(i)
-            
-            # Sideways Move
-            print(f"SM - Run {i+1}")
-            self.run_sideways_move(i)
-            
-            # Random Restart
-            print(f"RR - Run {i+1}")
-            self.run_random_restart(i)
-            
-            # Stochastic
-            print(f"S - Run {i+1}")
-            self.run_stochastic(i)
-            
-            # Simulated Annealing
-            print(f"SA - Run {i+1}")
-            self.run_simulated_annealing(i)
-            
-            # Genetic
-            print(f"G - Run {i+1}")
-            self.run_genetic(i)
+        num_runs = 3
+        algorithms = [
+            ("SAC", self.run_steepest_ascent),
+            ("SM", self.run_sideways_move),
+            ("RR", self.run_random_restart),
+            ("S", self.run_stochastic),
+            ("SA", self.run_simulated_annealing),
+            ("G", self.run_genetic)
+        ]
 
-    def run_steepest_ascent(self, run_index):
+        for alg_name, alg_func in algorithms:
+            for run in range(num_runs):
+                print(f"{alg_name} - Run {run+1}")
+                alg_func()
+
+    def run_steepest_ascent(self):
+        self.cube = MagicCube(cube_data=self.initial_cube_state)
         start_time = time.time()
         initial_cost = self.cube.calculate_cost()
-        final_cost, final_cube, iterations, obj_values = steepest_ascent_hill_climbing(self.cube)
+        initial_cube = np.copy(self.cube.cube)
+        final_cost, final_cube, iterations, steps = steepest_ascent_hill_climbing(self.cube)
         duration = time.time() - start_time
-        
-        self.sac.add_run(initial_cost, final_cost, iterations, duration, obj_values)
+        self.sac.add_run(initial_cost, initial_cube, final_cost, final_cube, iterations, duration, steps)
 
-    def run_sideways_move(self, run_index):
+    def run_sideways_move(self):
+        self.cube = MagicCube(cube_data=self.initial_cube_state)
         start_time = time.time()
         initial_cost = self.cube.calculate_cost()
-        final_cost, final_cube, iterations, obj_values = hill_climbing_with_sideways_move(
-            self.cube, max_sideways_moves=10, max_iterations=1000
-        )
+        initial_cube = np.copy(self.cube.cube)
+        final_cost, final_cube, iterations, steps = hill_climbing_with_sideways_move(self.cube, max_sideways_moves=10, max_iterations=1000)
         duration = time.time() - start_time
-        
-        self.sm.add_run(initial_cost, final_cost, iterations, duration, obj_values)
+        self.sm.add_run(initial_cost, initial_cube, final_cost, final_cube, iterations, duration, steps)
 
-    def run_random_restart(self, run_index):
+    def run_random_restart(self):
+        self.cube = MagicCube(cube_data=self.initial_cube_state)
         start_time = time.time()
         initial_cost = self.cube.calculate_cost()
-        final_cost, final_cube, iterations, restarts, obj_values = random_restart_hill_climbing(
-            self.cube, max_restarts=3
-        )
+        initial_cube = np.copy(self.cube.cube)
+        final_cost, final_cube, iterations, steps, iterations_per_restart = random_restart_hill_climbing(self.cube, max_restarts=3)
         duration = time.time() - start_time
-        
-        self.rr.add_run(initial_cost, final_cost, iterations, duration, obj_values)
-        
-    def run_stochastic(self, run_index):
+        self.rr.add_run(initial_cost, initial_cube, final_cost, final_cube, iterations, duration, steps, iterations_per_restart)
+
+    def run_stochastic(self):
+        self.cube = MagicCube(cube_data=self.initial_cube_state)
         start_time = time.time()
         initial_cost = self.cube.calculate_cost()
-        final_cost, final_cube, iterations, obj_values = stochastic_hill_climbing(self.cube)
+        initial_cube = np.copy(self.cube.cube)
+        final_cost, final_cube, iterations, steps = stochastic_hill_climbing(self.cube)
         duration = time.time() - start_time
-        
-        self.s.add_run(initial_cost, final_cost, iterations, duration, obj_values)
+        self.s.add_run(initial_cost, initial_cube, final_cost, final_cube, iterations, duration, steps)
 
-    def run_simulated_annealing(self, run_index):
+    def run_simulated_annealing(self):
+        self.cube = MagicCube(cube_data=self.initial_cube_state)
         start_time = time.time()
         initial_cost = self.cube.calculate_cost()
-        final_cost, final_cube, iterations, temperatures, obj_values = simulated_annealing(self.cube)
+        initial_cube = np.copy(self.cube.cube)
+        final_cost, final_cube, iterations, temperatures, steps, stuck_in_local_optima = simulated_annealing(self.cube)
         duration = time.time() - start_time
-        
-        self.sa.add_run(initial_cost, final_cost, iterations, duration, obj_values)
+        self.sa.add_run(initial_cost, initial_cube, final_cost, final_cube, iterations, duration, steps)
+        self.sa.stuck_count = stuck_in_local_optima  # Store the specific counter
 
-    def run_genetic(self, run_index):
+    def run_genetic(self):
+        self.cube = MagicCube(cube_data=self.initial_cube_state)
         start_time = time.time()
         initial_cost = self.cube.calculate_cost()
         final_cost, final_cube, generations, obj_values = genetic_algorithm(
@@ -308,62 +309,48 @@ class MagicCube:
         print(f"Weighted Cost: {weighted_cost}")
         print(f"Actual Constraint Violations: {actual_violations}")
 
-
-# Test the implementation with sample cube data
-# cube_data = [
-#     # First layer
-#     [ [78, 109, 15, 41, 72], [45, 71, 77, 108, 14], [107, 13, 44, 75, 76], [74, 80, 106, 12, 43], [11, 42, 73, 79, 110] ],
-#     # Second layer
-#     [ [40, 66, 97, 103, 9], [102, 8, 39, 70, 96], [69, 100, 101, 7, 38], [6, 37, 68, 99, 105], [98, 104, 10, 36, 67] ],
-#     # Third layer
-#     [ [122, 3, 34, 65, 91], [64, 95, 121, 2, 33], [1, 32, 63, 94, 125], [93, 124, 5, 31, 62], [35, 61, 92, 123, 4] ],
-#     # Fourth layer
-#     [ [59, 90, 116, 22, 28], [21, 27, 58, 89, 120], [88, 119, 25, 26, 57], [30, 56, 87, 118, 24], [117, 23, 29, 60, 86] ],
-#     # Fifth layer
-#     [ [16, 47, 53, 84, 115], [83, 114, 20, 46, 52], [50, 51, 82, 113, 19], [112, 18, 49, 55, 81], [54, 85, 111, 17, 48] ]
-# ]
-
-
 magic_cube = MagicCube()
 initial_cost = magic_cube.calculate_cost()
 
-com = input("Masukkan algoritma: ")
+magic_cube.display_cost()
+search = MagicCubeSearch()
 
-if com == "sac":
-    start_time = time.time()
-    final_cost, final_cube = steepest_ascent_hill_climbing(magic_cube)
-    end_time = time.time()
-    elapsed_time = end_time - start_time
+# Plot "nilai obj (y) banyak iterasi (x)" for each algorithm (generalized for all except Genetic Algorithm)
+def plot_obj_values(search_results, algorithm_name):
+    plt.figure(figsize=(12, 6))
+    for i, steps in enumerate(search_results.steps):
+        # Ensure steps have a 'cost' field; adjust if necessary based on the data structure
+        costs = [step['cost'] for step in steps]
+        plt.plot(range(len(costs)), costs, label=f'Run {i+1}')
+    plt.title(f'Objective Value vs Iterations - {algorithm_name}')
+    plt.xlabel('Iterations')
+    plt.ylabel('Objective Value')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(f'{algorithm_name}_objective_vs_iterations.png')
+    plt.show()
 
-    data = {
-        "initial_cost": initial_cost,
-        "final_cost": final_cost,
-        "initial_cube": magic_cube.cube,
-        "final_cube": final_cube,
-        "time": elapsed_time
-    }
-    print(data)
-elif com == "sm":
-    max_sideways_moves=1000
-    hill_climbing_with_sideways_move(magic_cube, max_sideways_moves, max_iterations=1000)
-elif com == "rr":
-    max_restarts=10
-    random_restart_hill_climbing(magic_cube, max_restarts)
-elif com ==  "s":
-    stochastic_hill_climbing(magic_cube) 
-elif com == "sa":
-    simulated_annealing(magic_cube)
-elif com == "g":
-    # Kontrol jumlah populasi
-    for pop_size in [50, 100, 150]:  # Variasi jumlah populasi
-        print(f"Kontrol Jumlah Populasi: Populasi = {pop_size}\n")
-        for i in range(3):  
-            print(f"Iterasi ke-{i+1} dengan Populasi {pop_size}")
-            genetic_algorithm(magic_cube, population_size=pop_size, generations=2000, mutation_rate=0.1, elitism=True)
+# Plot "e^(4E/T) (y) banyak iterasi (x)" for Simulated Annealing
+def plot_sa_exp_values(search_results):
+    plt.figure(figsize=(12, 6))
+    for i, steps in enumerate(search_results.steps):
+        # Extract e^(dE/T) values from steps
+        exp_values = [step['exp_value'] for step in steps]
+        plt.plot(range(len(exp_values)), exp_values, label=f'Run {i+1}')
+    
+    plt.title('e^(dE/T) vs Iterations - Simulated Annealing')
+    plt.xlabel('Iterations')
+    plt.ylabel('e8')
+    plt.yscale('log')  # Use log scale for better visualization
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('SA_exp_vs_iterations.png')
+    plt.show()
 
-    # Kontrol banyak iterasi
-    for gen_count in [1000, 2000, 3000]:  # Variasi banyak iterasi
-        print(f"Kontrol Banyak Iterasi: Iterasi = {gen_count}\n")
-        for i in range(3): 
-            print(f"Iterasi ke-{i+1} dengan Generasi {gen_count}")
-            genetic_algorithm(magic_cube, population_size=100, generations=gen_count, mutation_rate=0.1, elitism=True)
+# Call plotting functions
+plot_obj_values(search.sac, 'Steepest Ascent')
+plot_obj_values(search.sm, 'Sideways Move')
+plot_obj_values(search.rr, 'Random Restart')
+plot_obj_values(search.s, 'Stochastic')
+plot_obj_values(search.sa, 'Simulated Annealing')
+plot_sa_exp_values(search.sa)

@@ -4,28 +4,36 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import random
 
-def hill_climbing_with_sideways_move(cube, max_sideways_moves=1000, max_iterations=2000, tabu_list_size=50):
+def hill_climbing_with_sideways_move(cube, max_sideways_moves, max_iterations, tabu_list_size=50):
     """
     Enhanced version of hill climbing with sideways moves that uses:
     - Tabu list to prevent cycling
     - Adaptive neighborhood selection
     - Line sum analysis for informed swaps
     - Temperature-like parameter for dynamic acceptance
+
+    Returns:
+    - final_cost: The final cost after the algorithm terminates.
+    - final_cube: The state of the cube when the algorithm ends.
+    - iteration: The number of iterations performed.
+    - cost_progress: List of objective values over iterations.
+    - sideways_moves: Total number of sideways moves made.
     """
     iteration = 0
     sideways_moves = 0
     current_cost = cube.calculate_actual_cost()
     cost_progress = []
-    
+    steps = []  # Collect step data
+
     # Initialize tabu list to prevent revisiting recent states
     tabu_list = []
-    
+
     # Track the effectiveness of different types of swaps
     swap_effectiveness = defaultdict(lambda: {'attempts': 0, 'improvements': 0})
-    
+
     # Temperature-like parameter for accepting worse moves occasionally
     initial_temperature = 10.0
-    
+
     while current_cost > 0 and iteration < max_iterations:
         print(f"Iteration {iteration}: {current_cost} cost, Sideways moves: {sideways_moves}")
         
@@ -40,8 +48,8 @@ def hill_climbing_with_sideways_move(cube, max_sideways_moves=1000, max_iteratio
         
         # Track if we found any improvement
         found_improvement = False
-        temperature = initial_temperature * (1 - iteration/max_iterations)
-        
+        temperature = initial_temperature * (1 - iteration / max_iterations)
+
         for swap_type, pos1, pos2 in candidate_swaps:
             if (pos1, pos2) in tabu_list:
                 continue
@@ -62,14 +70,33 @@ def hill_climbing_with_sideways_move(cube, max_sideways_moves=1000, max_iteratio
                 found_improvement = True
                 swap_effectiveness[swap_type]['improvements'] += 1
                 update_tabu_list(tabu_list, (pos1, pos2), tabu_list_size)
+
+                # Add step tracking here
+                step_info = {
+                    "index1": pos1[0] * cube.size**2 + pos1[1] * cube.size + pos1[2],
+                    "index2": pos2[0] * cube.size**2 + pos2[1] * cube.size + pos2[2],
+                    "cost": current_cost
+                }
+                steps.append(step_info)
+                print(f"Step {iteration + 1}: {step_info}")
                 break
+
             elif new_cost == current_cost and sideways_moves < max_sideways_moves:
-                acceptance_prob = np.exp(-0.1/temperature)
+                acceptance_prob = np.exp(-0.1 / temperature)
                 if random.random() < acceptance_prob:
                     best_cube = new_cube.copy()
                     current_cost = new_cost
                     sideways_moves += 1
                     update_tabu_list(tabu_list, (pos1, pos2), tabu_list_size)
+
+                    # Add step tracking here
+                    step_info = {
+                        "index1": pos1[0] * cube.size**2 + pos1[1] * cube.size + pos1[2],
+                        "index2": pos2[0] * cube.size**2 + pos2[1] * cube.size + pos2[2],
+                        "cost": current_cost
+                    }
+                    steps.append(step_info)
+                    print(f"Step {iteration + 1}: {step_info}")
                     break
             
             # Restore original cube for next attempt
@@ -86,10 +113,8 @@ def hill_climbing_with_sideways_move(cube, max_sideways_moves=1000, max_iteratio
         if iteration % 50 == 0:
             adjust_strategy(swap_effectiveness)
     
-    # Plot results
-    plot_results(cost_progress)
-    
-    return current_cost, cube.cube, iteration, cost_progress
+    # Return structured data matching the expected output
+    return current_cost, cube.cube, iteration, steps
 
 def calculate_line_sums(cube):
     """Calculate all line sums in the cube and their deviations from magic number."""
