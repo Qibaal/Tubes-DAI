@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 def simulated_annealing(cube,
-                               initial_temperature=50000,  # Much higher initial temperature
+                               initial_temperature=1000,  # Much higher initial temperature
                                min_temperature=0.01,      # Much lower minimum temperature
-                               max_iterations=150000,     # Increased iterations
+                               max_iterations=5000,     # Increased iterations
                                stage_iterations=1000,
                                multi_swap_probability=0.3):
     """
@@ -192,8 +192,4 @@ def simulated_annealing(cube,
     plt.grid(True)
     plt.show()
     
-    return best_cost == 0, cost_history, {
-        'final_cost': best_cost,
-        'initial_cost': cost_history[0],
-        'improvement_percentage': ((cost_history[0] - best_cost) / cost_history[0]) * 100
-    }
+    return best_cost == 0, best_configuration, iteration, current_temperature, cost_history
