@@ -1,9 +1,6 @@
 import numpy as np
 import time
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-
 from algorithms.steepestascenthc import steepest_ascent_hill_climbing
 from algorithms.sidewaysmovehc import hill_climbing_with_sideways_move
 from algorithms.randomrestarthc import random_restart_hill_climbing
@@ -311,8 +308,6 @@ class MagicCube:
         print(f"Weighted Cost: {weighted_cost}")
         print(f"Actual Constraint Violations: {actual_violations}")
 
-class AlgorithmRequest(BaseModel):
-    algorithm: str
 
 # Test the implementation with sample cube data
 # cube_data = [
@@ -328,75 +323,47 @@ class AlgorithmRequest(BaseModel):
 #     [ [16, 47, 53, 84, 115], [83, 114, 20, 46, 52], [50, 51, 82, 113, 19], [112, 18, 49, 55, 81], [54, 85, 111, 17, 48] ]
 # ]
 
-# Initialize FastAPI
-app = FastAPI()
-
 
 magic_cube = MagicCube()
 initial_cost = magic_cube.calculate_cost()
 
-@app.post("/run-algorithm/")
-async def run_algorithm(request: AlgorithmRequest):
-    magic_cube = MagicCube()
-    initial_cost = magic_cube.calculate_cost()
+com = input("Masukkan algoritma: ")
 
-    # Capture the cost and initial cube state
-    response_data = {
+if com == "sac":
+    start_time = time.time()
+    final_cost, final_cube = steepest_ascent_hill_climbing(magic_cube)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+
+    data = {
         "initial_cost": initial_cost,
-        "initial_cube": magic_cube.cube.tolist() if isinstance(magic_cube.cube, np.ndarray) else magic_cube.cube
+        "final_cost": final_cost,
+        "initial_cube": magic_cube.cube,
+        "final_cube": final_cube,
+        "time": elapsed_time
     }
+    print(data)
+elif com == "sm":
+    max_sideways_moves=1000
+    hill_climbing_with_sideways_move(magic_cube, max_sideways_moves, max_iterations=1000)
+elif com == "rr":
+    max_restarts=10
+    random_restart_hill_climbing(magic_cube, max_restarts)
+elif com ==  "s":
+    stochastic_hill_climbing(magic_cube) 
+elif com == "sa":
+    simulated_annealing(magic_cube)
+elif com == "g":
+    # Kontrol jumlah populasi
+    for pop_size in [50, 100, 150]:  # Variasi jumlah populasi
+        print(f"Kontrol Jumlah Populasi: Populasi = {pop_size}\n")
+        for i in range(3):  
+            print(f"Iterasi ke-{i+1} dengan Populasi {pop_size}")
+            genetic_algorithm(magic_cube, population_size=pop_size, generations=2000, mutation_rate=0.1, elitism=True)
 
-    if request.algorithm == "sac":
-        start_time = time.time()
-        final_cost, final_cube = steepest_ascent_hill_climbing(magic_cube)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-
-        response_data.update({
-            "final_cost": final_cost,
-            "final_cube": final_cube.tolist() if isinstance(final_cube, np.ndarray) else final_cube,
-            "time": elapsed_time
-        })
-    else:
-        raise HTTPException(status_code=400, detail="Algorithm not recognized")
-
-    return response_data
-
-# if com == "sac":
-#     start_time = time.time()
-#     final_cost, final_cube = steepest_ascent_hill_climbing(magic_cube)
-#     end_time = time.time()
-#     elapsed_time = end_time - start_time
-
-#     data = {
-#         "initial_cost": initial_cost,
-#         "final_cost": final_cost,
-#         "initial_cube": magic_cube.cube,
-#         "final_cube": final_cube,
-#         "time": elapsed_time
-#     }
-#     print(data)
-# elif com == "sm":
-#     max_sideways_moves=1000
-#     hill_climbing_with_sideways_move(magic_cube, max_sideways_moves, max_iterations=1000)
-# elif com == "rr":
-#     max_restarts=10
-#     random_restart_hill_climbing(magic_cube, max_restarts)
-# elif com ==  "s":
-#     stochastic_hill_climbing(magic_cube) 
-# elif com == "sa":
-#     simulated_annealing(magic_cube)
-# elif com == "g":
-#     # Kontrol jumlah populasi
-#     for pop_size in [50, 100, 150]:  # Variasi jumlah populasi
-#         print(f"Kontrol Jumlah Populasi: Populasi = {pop_size}\n")
-#         for i in range(3):  
-#             print(f"Iterasi ke-{i+1} dengan Populasi {pop_size}")
-#             genetic_algorithm(magic_cube, population_size=pop_size, generations=2000, mutation_rate=0.1, elitism=True)
-
-#     # Kontrol banyak iterasi
-#     for gen_count in [1000, 2000, 3000]:  # Variasi banyak iterasi
-#         print(f"Kontrol Banyak Iterasi: Iterasi = {gen_count}\n")
-#         for i in range(3): 
-#             print(f"Iterasi ke-{i+1} dengan Generasi {gen_count}")
-#             genetic_algorithm(magic_cube, population_size=100, generations=gen_count, mutation_rate=0.1, elitism=True)
+    # Kontrol banyak iterasi
+    for gen_count in [1000, 2000, 3000]:  # Variasi banyak iterasi
+        print(f"Kontrol Banyak Iterasi: Iterasi = {gen_count}\n")
+        for i in range(3): 
+            print(f"Iterasi ke-{i+1} dengan Generasi {gen_count}")
+            genetic_algorithm(magic_cube, population_size=100, generations=gen_count, mutation_rate=0.1, elitism=True)
