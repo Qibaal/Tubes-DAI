@@ -1,106 +1,100 @@
-import numpy as np
 import random
-import matplotlib.pyplot as plt  # Import library for plotting
+import numpy as np
 
-def create_initial_population(magic_cube, population_size):
-    """
-    Generate an initial population of random cubes with the same shape as the given magic_cube.
-    """
-    population = []
-    size = magic_cube.size
-    for _ in range(population_size):
-        cube = np.random.permutation(range(1, size**3 + 1)).reshape((size, size, size))
-        population.append(cube)
-    return population
+# Genetic Algorithm Parameters
+POPULATION_SIZE = 100
+MUTATION_RATE = 0.1
+CUBE_SIZE = 5
+MAX_GENERATIONS = 1000
 
-def calculate_fitness(cube, magic_cube):
-    """
-    Calculate the fitness of the cube using the objective function from the MagicCube class.
-    """
-    magic_cube.cube = cube  # Update the cube in the MagicCube instance
-    return magic_cube.calculate_cost()
+# Objective function to calculate deviation
+def calculate_deviation(cube):
+    target_sum = CUBE_SIZE * (CUBE_SIZE**3 + 1) // 2
+    deviation = 0
 
-def selection(population, fitness_scores):
-    """
-    Select two parents from the population using tournament selection.
-    """
-    tournament_size = 3
-    selected_indices = random.sample(range(len(population)), k=tournament_size)
-    selected_fitness = [fitness_scores[i] for i in selected_indices]
-    best_index = selected_indices[selected_fitness.index(min(selected_fitness))]
-    return population[best_index]
+    # Check rows, columns, and pillars
+    for i in range(CUBE_SIZE):
+        deviation += abs(target_sum - np.sum(cube[i, :, :]))  # Row sum
+        deviation += abs(target_sum - np.sum(cube[:, i, :]))  # Column sum
+        deviation += abs(target_sum - np.sum(cube[:, :, i]))  # Pillar sum
 
-def crossover(parent1, parent2):
-    """
-    Perform crossover between two parent cubes.
-    """
-    size = parent1.shape[0]
-    child = parent1.copy()
-    crossover_point = random.randint(0, size - 1)
-    if random.random() > 0.5:
-        child[:crossover_point] = parent2[:crossover_point]
-    else:
-        child[:, :crossover_point] = parent2[:, :crossover_point]
-    return child
+    # Check main space diagonals
+    deviation += abs(target_sum - np.sum([cube[i, i, i] for i in range(CUBE_SIZE)]))
+    deviation += abs(target_sum - np.sum([cube[i, i, CUBE_SIZE - i - 1] for i in range(CUBE_SIZE)]))
+    deviation += abs(target_sum - np.sum([cube[i, CUBE_SIZE - i - 1, i] for i in range(CUBE_SIZE)]))
+    deviation += abs(target_sum - np.sum([cube[CUBE_SIZE - i - 1, i, i] for i in range(CUBE_SIZE)]))
 
-def mutate(cube):
-    """
-    Perform mutation by swapping two random elements in the cube.
-    """
-    size = cube.shape[0]
-    pos1 = tuple(random.randint(0, size - 1) for _ in range(3))
-    pos2 = tuple(random.randint(0, size - 1) for _ in range(3))
-    cube[pos1], cube[pos2] = cube[pos2], cube[pos1]
-    return cube
+    return deviation
 
-def genetic_algorithm(magic_cube, population_size=100, generations=1000, mutation_rate=0.15, elitism=True):
-    """
-    Solve the magic cube using a genetic algorithm.
-    """
-    population = create_initial_population(magic_cube, population_size)
-    best_cube = None
-    best_fitness = float('inf')
-    fitness_progress = []
+# Initializing a random individual
+def create_individual():
+    return np.random.permutation(range(1, CUBE_SIZE**3 + 1)).reshape((CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))
 
-    for generation in range(generations):
-        fitness_scores = [calculate_fitness(cube, magic_cube) for cube in population]
-        min_fitness = min(fitness_scores)
-        if min_fitness < best_fitness:
-            best_fitness = min_fitness
-            best_cube = population[fitness_scores.index(min_fitness)]
-            print(f"Generation {generation}: Best fitness = {best_fitness}")
+# Fitness function
+def fitness(individual):
+    return -calculate_deviation(individual)  # Negate deviation for maximization
 
-        fitness_progress.append(best_fitness)
+# Ordered crossover function
+def ordered_crossover(parent1, parent2):
+    size = CUBE_SIZE**3
+    start, end = sorted(random.sample(range(size), 2))
+    child1, child2 = np.empty(size, dtype=int), np.empty(size, dtype=int)
+    child1.fill(-1)
+    child2.fill(-1)
 
-        if best_fitness == 0:
-            print(f"Solution found in generation {generation}")
-            print("Best solution found:")
-            print(best_cube)
-            break
+    child1[start:end] = parent1[start:end]
+    child2[start:end] = parent2[start:end]
 
-        new_population = []
-        if elitism:
-            new_population.append(best_cube)
+    def fill_child(child, parent):
+        current_pos = end % size
+        for num in parent:
+            if num not in child:
+                child[current_pos] = num
+                current_pos = (current_pos + 1) % size
+        return child
 
-        while len(new_population) < population_size:
-            parent1 = selection(population, fitness_scores)
-            parent2 = selection(population, fitness_scores)
-            child = crossover(parent1, parent2)
-            if random.random() < mutation_rate:
-                child = mutate(child)
-            new_population.append(child)
+    child1 = fill_child(child1, parent2)
+    child2 = fill_child(child2, parent1)
 
-        population = new_population
+    return child1.reshape((CUBE_SIZE, CUBE_SIZE, CUBE_SIZE)), child2.reshape((CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))
 
-    plt.plot(fitness_progress)
-    plt.title("Fitness Progression Over Generations")
-    plt.xlabel("Generations")
-    plt.ylabel("Best Fitness (Cost)")
-    plt.grid(True)
-    plt.show()
+# Mutation function with duplicate prevention
+def mutate(individual):
+    if random.random() < MUTATION_RATE:
+        size = CUBE_SIZE**3
+        idx1, idx2 = random.sample(range(size), 2)
+        flat_individual = individual.flatten()
+        flat_individual[idx1], flat_individual[idx2] = flat_individual[idx2], flat_individual[idx1]
+        individual = flat_individual.reshape((CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))
+    return individual
 
-    print("Solution not found within the given generations.")
-    print("Best solution found:")
-    print(best_cube)
-    print(f"Total Cost: {best_fitness}")
-    return best_cube
+# Generating initial population
+population = [create_individual() for _ in range(POPULATION_SIZE)]
+
+# Main loop of the genetic algorithm
+for generation in range(MAX_GENERATIONS):
+    population = sorted(population, key=lambda ind: fitness(ind), reverse=True)
+
+    new_population = population[:10]  # Elitism: keep the top 10 individuals
+
+    while len(new_population) < POPULATION_SIZE:
+        parent1, parent2 = random.sample(population[:50], 2)  # Tournament selection
+        offspring1, offspring2 = ordered_crossover(parent1.flatten(), parent2.flatten())
+        offspring1 = mutate(offspring1)
+        offspring2 = mutate(offspring2)
+        new_population.extend([offspring1, offspring2])
+
+    population = new_population[:POPULATION_SIZE]
+
+    # Print best result in each generation
+    best_fitness = fitness(population[0])
+    print(f"Generation {generation}, Best fitness: {best_fitness}")
+
+    if best_fitness == 0:  # Perfect solution found
+        print("Optimal solution found!")
+        break
+
+# Display the best solution
+best_solution = population[0]
+print("Best solution:")
+print(best_solution)
