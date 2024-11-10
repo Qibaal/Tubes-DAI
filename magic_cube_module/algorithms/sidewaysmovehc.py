@@ -89,7 +89,7 @@ def hill_climbing_with_sideways_move(cube, max_sideways_moves=1000, max_iteratio
     # Plot results
     plot_results(cost_progress)
     
-    return current_cost == 0
+    return current_cost, cube.cube, iteration, cost_progress
 
 def calculate_line_sums(cube):
     """Calculate all line sums in the cube and their deviations from magic number."""
