@@ -137,13 +137,103 @@ const config = [
       {
         index1: 2,
         index2: 123,
-        cost: 2000,
+        cost: 2900,
       },
       {
-        index1: 0,
-        index2: 0,
-        cost: 3000,
+        index1: 40,
+        index2: 76,
+        cost: 2800,
       },
+      {
+        index1: 125,
+        index2: 105,
+        cost: 2700,
+      },
+      {
+        index1: 11,
+        index2: 124,
+        cost: 2600,
+      },
+      {
+        index1: 89,
+        index2: 103,
+        cost: 2500,
+      },
+      {
+        index1: 20,
+        index2: 122,
+        cost: 2400,
+      },
+      {
+        index1: 70,
+        index2: 22,
+        cost: 2300,
+      },
+      {
+        index1: 73,
+        index2: 121,
+        cost: 2200,
+      },
+      {
+        index1: 92,
+        index2: 111,
+        cost: 2100,
+      },
+      {
+        index1: 28,
+        index2: 32,
+        cost: 2000
+      },
+      {
+        index1: 99,
+        index2:15,
+        cost: 1900,
+      },
+      {
+        index1: 81,
+        index2: 57,
+        cost: 1800,
+      },
+      {
+        index1: 41,
+        index2: 43,
+        cost: 1700,
+      },
+      {
+        index1: 52,
+        index2: 16,
+        cost: 1600,
+      },
+      {
+        index1: 72,
+        index2: 14,
+        cost: 1500,
+      },
+      {
+        index1: 84,
+        index2: 106,
+        cost: 1400,
+      },
+      {
+        index1: 77,
+        index2: 69,
+        cost: 1300,
+      },
+      {
+        index1: 96,
+        index2: 87,
+        cost: 1200,
+      },
+      {
+        index1: 31,
+        index2: 4,
+        cost: 1100,
+      },
+      {
+        index1: 63,
+        index2: 7,
+        cost:1000
+      }
     ],
   },
   {
@@ -164,13 +254,98 @@ const config = [
       {
         index1: 2,
         index2: 123,
+        cost: 2800,
+      },
+      {
+        index1: 68,
+        index2: 37,
+        cost: 2700,
+      },
+      {
+        index1: 62,
+        index2: 56,
+        cost: 2600,
+      },
+      {
+        index1: 23,
+        index2: 80,
+        cost: 2500,
+      },
+      {
+        index1: 18,
+        index2: 117,
+        cost: 2400,
+      },
+      {
+        index1: 116,
+        index2: 19,
+        cost: 2300,
+      },
+      {
+        index1: 86,
+        index2: 98,
+        cost: 2200,
+      },
+      {
+        index1: 88,
+        index2: 2,
+        cost: 2100,
+      },
+      {
+        index1: 53,
+        index2: 121,
         cost: 2000,
       },
       {
-        index1: 0,
-        index2: 0,
-        cost: 3000,
+        index1: 12,
+        index2: 66,
+        cost: 1900,
       },
+      {
+        index1: 13,
+        index2: 95,
+        cost: 1800,
+      },
+      {
+        index1: 25,
+        index2: 74,
+        cost: 1700,
+      },
+      {
+        index1: 59,
+        index2: 5,
+        cost: 1600,
+      },
+      {
+        index1: 34,
+        index2: 85,
+        cost: 1500,
+      },
+      {
+        index1: 75,
+        index2: 61,
+        cost: 1400,
+      },
+      {
+        index1: 118,
+        index2: 6,
+        cost: 1300,
+      },
+      {
+        index1: 45,
+        index2: 60,
+        cost: 1200,
+      },
+      {
+        index1: 47,
+        index2: 26,
+        cost: 1100,
+      },
+      {
+        index1: 108,
+        index2: 71,
+        cost: 1000,
+      }
     ],
   },
   {
@@ -214,13 +389,103 @@ const config = [
       {
         index1: 2,
         index2: 123,
+        cost: 2900,
+      },
+      {
+        index1: 51,
+        index2: 78,
+        cost: 2800,
+      },
+      {
+        index1: 58,
+        index2: 91,
+        cost: 2700,
+      },
+      {
+        index1: 119,
+        index2: 64,
+        cost: 2600,
+      },
+      {
+        index1: 83,
+        index2: 110,
+        cost: 2500,
+      },
+      {
+        index1: 39,
+        index2: 54,
+        cost: 2400,
+      },
+      {
+        index1: 82,
+        index2: 65,
+        cost: 2300,
+      },
+      {
+        index1: 27,
+        index2: 38,
+        cost: 2200,
+      },
+      {
+        index1: 10,
+        index2: 94,
+        cost: 2100
+      },
+      {
+        index1: 37,
+        index2: 78,
         cost: 2000,
       },
       {
-        index1: 0,
-        index2: 0,
-        cost: 3000,
+        index1: 50,
+        index2: 29,
+        cost: 1900,
       },
+      {
+        index1: 108,
+        index2: 52,
+        cost: 1800,
+      },
+      {
+        index1: 96,
+        index2: 70,
+        cost: 1700,
+      },
+      {
+        index1: 63,
+        index2: 20,
+        cost: 1600,
+      },
+      {
+        index1: 3,
+        index2: 103,
+        cost: 1500,
+      },
+      {
+        index1: 60,
+        index2: 66,
+        cost: 1400,
+      },
+      {
+        index1: 116,
+        index2: 62,
+        cost: 1300,
+      },
+      {
+        index1: 46,
+        index2: 92,
+        cost: 1200,
+      },
+      {
+        index1: 104,
+        index2: 14,
+        cost: 1100,
+      },
+      {
+        index1: 19,
+        index2: 9,
+        cost: 1000,
+      }
     ],
   },
 ];
