@@ -112,7 +112,7 @@ class MagicCubeSearch:
         start_time = time.time()
         initial_cost = self.cube.calculate_cost()
         final_cost, final_cube, generations, obj_values = genetic_algorithm(
-            self.cube, population_size=100, generations=2000, mutation_rate=0.1, elitism=True
+            self.cube, 100, 2000, 0.1, True
         )
         duration = time.time() - start_time
         
