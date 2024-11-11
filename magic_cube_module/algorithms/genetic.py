@@ -91,7 +91,7 @@ def mutate(individual):
         individual = flat_individual.reshape((CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))
     return individual
 
-# Genetic algorithm function
+# Genetic algoxrithm function
 def genetic_algorithm(cube, population_size, generations, mutation_rate, elitism):
     # Create an initial population of individuals
     population = [create_individual() for _ in range(population_size)]

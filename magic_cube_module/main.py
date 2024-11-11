@@ -111,12 +111,11 @@ class MagicCubeSearch:
         self.cube = MagicCube(cube_data=self.initial_cube_state)
         start_time = time.time()
         initial_cost = self.cube.calculate_cost()
-        final_cost, final_cube, generations, obj_values = genetic_algorithm(
+        final_cost, final_cube, generations = genetic_algorithm(
             self.cube, 100, 2000, 0.1, True
         )
         duration = time.time() - start_time
-        
-        self.g.add_run(initial_cost, final_cost, generations, duration, obj_values)
+        self.g.add_run(initial_cost, final_cost, generations, duration)
 
 
 class MagicCube:
