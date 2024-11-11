@@ -16,6 +16,7 @@ export default function Home() {
     second: { x: "", y: "", z: "" },
   });
 
+<<<<<<< Updated upstream
   useEffect(() => {
     if (!mountRef.current) return;
   
@@ -72,6 +73,127 @@ export default function Home() {
           cube.position.copy(position);
   
           // Create and apply texture with the block value
+=======
+  const [cost, setCost] = useState(initialConfig.initial_cost);
+  const [finalConfig, setFinalConfig] = useState([]);
+  const [currentCube, setCurrentCube] = useState(initialConfig.initial_cube);
+  const [elapsedTime, setTime] = useState(0);
+
+  const [iterations, setIterations] = useState(0);
+  const [stuck, setStuck] = useState(0);
+
+  const [geneticConfig, setGeneticConfig] = useState(0);
+
+  const [sliderItr, setSlider] = useState(0);
+
+  const updateConfig = (algoName) => {
+    if (algoName === "initial_value") {
+      setCost(initialConfig.initial_cost);
+      setCurrentCube(initialConfig.initial_cube);
+      setAlgo(algoName);
+      return;
+    }
+
+    const selectedConfig = config.find(
+      (c) => c.name.toLowerCase() === algoName
+    );
+
+    if (selectedConfig) {
+      setTime(selectedConfig.time);
+      setCost(selectedConfig.final_cost);
+      setFinalConfig(selectedConfig.final_cube);
+
+      // For simulated annealing
+      if (selectedConfig.stuck_frequency) {
+        setStuck(selectedConfig.stuck_frequency);
+      }
+    }
+    setAlgo(algoName);
+    setCurrentCube(selectedConfig.final_cube);
+  };
+
+  const handleToInitial = (stateType) => {
+    setTime(0);
+    setCost(initialConfig.initial_cost);
+    setCurrentCube(initialConfig.initial_cube);
+    setStuck(0);
+  };
+
+  const handleGeneticConfig = (state) => {
+    setGeneticConfig(geneticConfig + state);
+    if (geneticConfig < 0) setGeneticConfig(0);
+
+    console.log(geneticConfig);
+  };
+
+  const createNumberTexture = (number) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 128;
+    canvas.height = 128;
+    const context = canvas.getContext("2d");
+    if (context) {
+      context.fillStyle = "white";
+      context.font = "bold 64px Arial";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(number, 64, 64);
+    }
+    return new THREE.CanvasTexture(canvas);
+  };
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+directionalLight.position.set(10, 10, 10);
+
+  
+useEffect(() => {
+  if (!mountRef.current) return;
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth / 1.335, window.innerHeight / 1.335);
+  mountRef.current.appendChild(renderer.domElement);
+
+  // Camera position
+  camera.position.set(10, 10, 10);
+  camera.lookAt(0, 0, 0);
+
+  // Lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight.position.set(10, 10, 10);
+  scene.add(directionalLight);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  if (cubes.length === 0) {
+    // Initialize cubes for the first time
+    const cubeSize = 1.3;
+    const spacing = 3;
+    const cubesData = [];
+    let numberIndex = 0;
+
+    for (let x = 0; x < 5; x++) {
+      for (let y = 0; y < 5; y++) {
+        for (let z = 0; z < 5; z++) {
+          const number = currentCube[numberIndex]; // Get value from the array
+          const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+          const edgesGeometry = new THREE.EdgesGeometry(geometry);
+
+          // Create material for the edges with lower opacity
+          const edgesMaterial = new THREE.LineBasicMaterial({
+            color: 0x00ff00,
+            transparent: true,
+            opacity: 0.35,
+          });
+
+          const edges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
+          edges.position.set((x - 2) * spacing, (y - 2) * spacing, (z - 2) * spacing);
+          scene.add(edges);
+
+          // Add value display as a canvas texture
+>>>>>>> Stashed changes
           const canvas = document.createElement("canvas");
           canvas.width = 128;
           canvas.height = 128;
@@ -81,6 +203,7 @@ export default function Home() {
             context.font = "bold 64px Arial";
             context.textAlign = "center";
             context.textBaseline = "middle";
+<<<<<<< Updated upstream
             context.fillText(number.toString(), 64, 64);
           }
   
@@ -131,6 +254,86 @@ export default function Home() {
     };
   }, []);
   
+=======
+            context.fillText(number, 64, 64);
+          }
+          const numberTexture = new THREE.CanvasTexture(canvas);
+          const numberMaterial = new THREE.SpriteMaterial({ map: numberTexture });
+          const numberSprite = new THREE.Sprite(numberMaterial);
+          numberSprite.scale.set(0.5, 0.5, 1);
+          numberSprite.position.set((x - 2) * spacing, (y - 2) * spacing, (z - 2) * spacing);
+          scene.add(numberSprite);
+
+          cubesData.push({
+            blockValue: number,
+            xCor: (x - 2) * spacing,
+            yCor: (y - 2) * spacing,
+            zCor: (z - 2) * spacing,
+            mesh: edges,
+            numberSprite: numberSprite,
+          });
+
+          numberIndex++;
+        }
+      }
+    }
+
+    setCubes(cubesData);
+  } else {
+    // Clear existing scene and re-add cubes with updated positions
+    scene.clear();
+    scene.add(ambientLight);
+    scene.add(directionalLight);
+
+    cubes.forEach((cube) => {
+      scene.add(cube.mesh);
+
+      // Remove existing sprite if present
+      if (cube.numberSprite) {
+        scene.remove(cube.numberSprite);
+      }
+
+      // Update value display as a canvas texture
+      const canvas = document.createElement("canvas");
+      canvas.width = 128;
+      canvas.height = 128;
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.fillStyle = "white";
+        context.font = "bold 64px Arial";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText(cube.blockValue, 64, 64);
+      }
+      const numberTexture = new THREE.CanvasTexture(canvas);
+      const numberMaterial = new THREE.SpriteMaterial({ map: numberTexture });
+      cube.numberSprite = new THREE.Sprite(numberMaterial);
+      cube.numberSprite.scale.set(0.5, 0.5, 1);
+      cube.numberSprite.position.set(cube.xCor, cube.yCor, cube.zCor);
+
+      // Add updated sprite to scene and update reference
+      scene.add(cube.numberSprite);
+    });
+  }
+
+  const animate = () => {
+    requestAnimationFrame(animate);
+    controls.update();
+    TWEEN.update();  // Ensures TWEEN animations progress correctly
+    renderer.render(scene, camera);
+  };
+  animate();
+
+
+  return () => {
+    mountRef.current?.removeChild(renderer.domElement);
+    renderer.dispose();
+  };
+}, [cubes]);
+
+
+
+>>>>>>> Stashed changes
   
 
   // Handle user input for cube positions
@@ -142,6 +345,7 @@ export default function Home() {
     }));
   };
 
+<<<<<<< Updated upstream
   // Handle cube position swapping
   const handlePositionSwap = () => {
     const { first, second } = positions;
@@ -234,9 +438,75 @@ export default function Home() {
     } else {
       // Display failure message
       window.alert("Block swap failed: One or both of the blocks could not be found. Check the input coordinates.");
+=======
+  const handlePositionSwap = (firstValue, secondValue) => {
+    // Find the cubes to swap based on their block values
+    const firstCube = cubes.find((c) => c.blockValue === firstValue);
+    const secondCube = cubes.find((c) => c.blockValue === secondValue);
+
+    if (firstCube && secondCube) {
+        // Clone the current cubes array to avoid direct mutation
+        const updatedCubes = cubes.map((cube) => {
+            if (cube.blockValue === firstValue) {
+                return { ...cube, xCor: secondCube.xCor, yCor: secondCube.yCor, zCor: secondCube.zCor };
+            } else if (cube.blockValue === secondValue) {
+                return { ...cube, xCor: firstCube.xCor, yCor: firstCube.yCor, zCor: firstCube.zCor };
+            }
+            return cube;
+        });
+
+        // Update positions and initiate TWEEN animations
+        new TWEEN.Tween(firstCube.mesh.position)
+            .to({ x: secondCube.xCor, y: secondCube.yCor, z: secondCube.zCor }, 1000)
+            .easing(TWEEN.Easing.Quadratic.InOut)
+            .start();
+
+        new TWEEN.Tween(secondCube.mesh.position)
+            .to({ x: firstCube.xCor, y: firstCube.yCor, z: firstCube.zCor }, 1000)
+            .easing(TWEEN.Easing.Quadratic.InOut)
+            .start();
+
+        // Update the cubes state to reflect new coordinates
+        setCubes(updatedCubes);
+    } else {
+        alert("Cube swap failed: One or both cube values not found.");
+>>>>>>> Stashed changes
     }
+};
+
+
+  const reRenderScene = () => {
+    scene.clear();
+    scene.add(ambientLight);
+    scene.add(directionalLight);
+  
+    cubes.forEach((cube) => {
+      scene.add(cube.mesh);
+  
+      // Re-add value display as a canvas texture
+      const canvas = document.createElement("canvas");
+      canvas.width = 128;
+      canvas.height = 128;
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.fillStyle = "white";
+        context.font = "bold 64px Arial";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText(cube.blockValue, 64, 64);
+      }
+      const numberTexture = new THREE.CanvasTexture(canvas);
+      const numberMaterial = new THREE.SpriteMaterial({ map: numberTexture });
+      const numberSprite = new THREE.Sprite(numberMaterial);
+      numberSprite.scale.set(0.5, 0.5, 1);
+      numberSprite.position.set(cube.xCor, cube.yCor, cube.zCor);
+      scene.add(numberSprite);
+    });
   };
   
+
+const [firstValue, setFirstValue] = useState(null);
+const [secondValue, setSecondValue] = useState(null);
 
   return (
     <main className="min-h-screen flex flex-row ">
@@ -297,6 +567,87 @@ export default function Home() {
 
         <div ref={mountRef} /> {/* Container for 3D scene */}
       </section>
+<<<<<<< Updated upstream
+=======
+
+      {/* Cube */}
+      <div className="flex flex-row">
+        <div className="flex flex-col items-center px-6 py-4 w-1/4 space-y-8 bg-gray-500">
+          <h2 className="text-white font-bold text-xl">{algo.toUpperCase()}</h2>
+
+          <input
+            type="number"
+            placeholder="First Cube Value"
+            className="p-2 rounded border border-gray-300"
+            onChange={(e) => setFirstValue(parseInt(e.target.value, 10))}
+          />
+          <input
+            type="number"
+            placeholder="Second Cube Value"
+            className="p-2 rounded border border-gray-300"
+            onChange={(e) => setSecondValue(parseInt(e.target.value, 10))}
+          />
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={() => {
+              if (isNaN(firstValue) || isNaN(secondValue)) {
+                alert("Please enter valid cube values for both inputs.");
+                return;
+              }
+              handlePositionSwap(firstValue, secondValue);
+            }}
+          >
+            Swap Cubes
+          </button>
+
+
+          {algo != "initial_value" && (
+            <div className="w-full flex flex-col space-y-8 items-center">
+              <div className="w-full flex flex-col space-y-8 bg-white text-black rounded-xl pt-4 pb-8 px-4 ">
+                <p>
+                  Slider Value: <span className="font-bold">{sliderItr}</span>
+                </p>
+                <DraggableSlider
+                  min={sliderItr}
+                  max={5000}
+                  initialValue={0}
+                  onChange={(newValue) => setSlider(newValue)}
+                />
+              </div>
+
+              <div className="w-full bg-white text-black rounded-xl py-4 px-4">
+                <p>Current Cost</p>
+                <p className="font-bold">8000</p>
+                <br />
+                <p>First Index Switched (Value)</p>
+                <p className="font-bold">3, 1, 2 (114)</p>
+                <br />
+                <p>Second Index Switched</p>
+                <p className="font-bold">0, 0, 0 (2)</p>
+              </div>
+
+              <Link href="#viz" className="w-full">
+                <button className="font-bold bg-white w-full py-2 rounded-lg">See Graph</button>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        <div ref={mountRef} className="w-3/4" />
+      </div>
+
+      {/* Viz */}
+      <div
+        className="w-full bg-white min-h-screen flex flex-col items-center justify-center"
+        id="viz"
+      >
+        <h2>Visualization</h2>
+        <Image src={VizMock} alt="viz-mock" />
+        <button>
+          <a href="#cube">Back to Cube</a>
+        </button>
+      </div>
+>>>>>>> Stashed changes
     </main>
   );
 }
