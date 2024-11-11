@@ -30,13 +30,93 @@ const config = [
       {
         index1: 2,
         index2: 123,
-        cost: 2000,
+        cost: 2700,
       },
       {
-        index1: 0,
-        index2: 0,
-        cost: 3000,
+        index1: 56,
+        index2: 96,
+        cost: 2600,
       },
+      {
+        index1: 17,
+        index2: 104,
+        cost: 2500,
+      },
+      {
+        index1: 36,
+        index2: 42,
+        cost: 2400
+      },
+      {
+        index1: 107,
+        index2: 112,
+        cost: 2300,
+      },
+      {
+        index1: 35,
+        index2: 123,
+        cost: 2200,
+      },
+      {
+        index1: 90,
+        index2: 113,
+        cost: 2100,
+      },
+      {
+        index1: 109,
+        index2: 33,
+        cost:2000
+      },
+      {
+        index1:101,
+        index2:3,
+        cost:1900
+      },
+      {
+        index1:9,
+        index2:55,
+        cost:1800,
+      },
+      {
+        index1:29,
+        index2:115,
+        cost:1700,
+      },
+      {
+        index1:93,
+        index2:102,
+        cost:1600,
+      },
+      {
+        index1: 114,
+        index2: 46,
+        cost: 1500,
+      },
+      {
+        index1: 79,
+        index2: 24,
+        cost: 1400,
+      },
+      {
+        index1: 97,
+        index2: 50,
+        cost: 1300,
+      },
+      {
+        index1: 100,
+        index2: 49,
+        cost: 1200,
+      },
+      {
+        index1: 30,
+        index2: 48,
+        cost:1100
+      },
+      {
+        index1: 120,
+        index2: 67,
+        cost:1000
+      }
     ],
   },
   {

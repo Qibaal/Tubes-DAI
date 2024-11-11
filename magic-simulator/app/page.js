@@ -197,33 +197,33 @@ export default function Home() {
 
   const handlePositionSwap = () => {
     const { first, second } = positions;
-
+  
     const spacing = 1.2;
     const convertToInternal = (value) => (value - 3) * spacing;
-
+  
     const firstX = convertToInternal(parseInt(first.x, 10));
     const firstY = convertToInternal(parseInt(first.y, 10));
     const firstZ = convertToInternal(parseInt(first.z, 10));
     const secondX = convertToInternal(parseInt(second.x, 10));
     const secondY = convertToInternal(parseInt(second.y, 10));
     const secondZ = convertToInternal(parseInt(second.z, 10));
-
+  
     const firstCube = cubes.find(
       (c) => c.xCor === firstX && c.yCor === firstY && c.zCor === firstZ
     );
-
+  
     const secondCube = cubes.find(
       (c) => c.xCor === secondX && c.yCor === secondY && c.zCor === secondZ
     );
-
+  
     if (firstCube && secondCube) {
       const pos1 = firstCube.mesh.position.clone();
       const pos2 = secondCube.mesh.position.clone();
-
+  
       const tempValue = firstCube.blockValue;
       firstCube.blockValue = secondCube.blockValue;
       secondCube.blockValue = tempValue;
-
+  
       const updateCubeTexture = (cube) => {
         const canvas = document.createElement("canvas");
         canvas.width = 128;
@@ -237,25 +237,37 @@ export default function Home() {
           context.textBaseline = "middle";
           context.fillText(cube.blockValue.toString(), 64, 64);
         }
-
+  
         const texture = new THREE.CanvasTexture(canvas);
         cube.mesh.children[0].material.map = texture;
         cube.mesh.children[0].material.needsUpdate = true;
       };
-
+  
       updateCubeTexture(firstCube);
       updateCubeTexture(secondCube);
-
+  
+      // Add temporary red outline to swapped cubes
+      const originalColor = 0x00ff00; // Original green color
+      const redColor = 0xff0000; // Red color
+  
+      firstCube.mesh.children[0].material.color.setHex(redColor);
+      secondCube.mesh.children[0].material.color.setHex(redColor);
+  
+      setTimeout(() => {
+        firstCube.mesh.children[0].material.color.setHex(originalColor);
+        secondCube.mesh.children[0].material.color.setHex(originalColor);
+      }, 2000); // 2000 milliseconds = 2 seconds
+  
       new TWEEN.Tween(firstCube.mesh.position)
         .to(pos2, 1000)
         .easing(TWEEN.Easing.Quadratic.InOut)
         .start();
-
+  
       new TWEEN.Tween(secondCube.mesh.position)
         .to(pos1, 1000)
         .easing(TWEEN.Easing.Quadratic.InOut)
         .start();
-
+  
       setCubes((prev) =>
         prev.map((c) => {
           if (c === firstCube) {
@@ -269,6 +281,7 @@ export default function Home() {
       );
     }
   };
+  
 
   return (
     <main className="min-h-screen flex flex-col bg-gray-400">
