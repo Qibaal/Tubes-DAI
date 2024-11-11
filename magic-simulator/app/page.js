@@ -10,10 +10,17 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { initialConfig, config } from "./data/configData";
 import DraggableSlider from "./components/DraggableSlider";
 
-import VizMock from "@/public/next.svg";
-import VizMock2 from "@/public/vercel.svg";
+import VizMock from "@/public/graphs/bar-graph.png";
+import Viz1 from "@/public/graphs/sac.png";
+import Viz2 from "@/public/graphs/stochastic.jpg";
+// import Viz3 from "@/public/graphs/sideways.png";
+// import Viz4 from "@/public/graphs/rr.png";
+// import Viz5 from "@/public/graphs/sa.png";
+import Viz6 from "@/public/graphs/genetic.png";
+
 import LeftTri from "@/public/left-arrow.png";
 import RightTri from "@/public/right-arrow.png";
+import PauseBut from "@/public/pause.png";
 
 export default function Home() {
   const mountRef = useRef(null);
@@ -36,54 +43,19 @@ export default function Home() {
   const [cost, setCost] = useState(initialConfig.initial_cost);
   const [finalConfig, setFinalConfig] = useState([]);
   const [currentCube, setCurrentCube] = useState(initialConfig.initial_cube);
+  const [currentSteps, setSteps] = useState([]);
   const [elapsedTime, setTime] = useState(0);
 
-  const [iterations, setIterations] = useState(0);
-  const [stuck, setStuck] = useState(0);
+  const [run, setRun] = useState(1); // untuk opsi run keberapa
 
-  const [geneticConfig, setGeneticConfig] = useState(0);
+  const [stuck, setStuck] = useState(0); // stuck pada sideways
+  const [geneticConfig, setGeneticConfig] = useState(0); // konfigurasi genetic
 
-  const [sliderItr, setSlider] = useState(0);
+  const [sliderItr, setSlider] = useState(0); // slider use
 
-  const updateConfig = (algoName) => {
-    if (algoName === "initial_value") {
-      setCost(initialConfig.initial_cost);
-      setCurrentCube(initialConfig.initial_cube);
-      setAlgo(algoName);
-      return;
-    }
-
-    const selectedConfig = config.find(
-      (c) => c.name.toLowerCase() === algoName
-    );
-
-    if (selectedConfig) {
-      setTime(selectedConfig.time);
-      setCost(selectedConfig.final_cost);
-      setFinalConfig(selectedConfig.final_cube);
-
-      // For simulated annealing
-      if (selectedConfig.stuck_frequency) {
-        setStuck(selectedConfig.stuck_frequency);
-      }
-    }
-    setAlgo(algoName);
-    setCurrentCube(selectedConfig.final_cube);
-  };
-
-  const handleToInitial = (stateType) => {
-    setTime(0);
-    setCost(initialConfig.initial_cost);
-    setCurrentCube(initialConfig.initial_cube);
-    setStuck(0);
-  };
-
-  const handleGeneticConfig = (state) => {
-    setGeneticConfig(geneticConfig + state);
-    if (geneticConfig < 0) setGeneticConfig(0);
-
-    console.log(geneticConfig);
-  };
+  // Video Player
+  const [play, setPlay] = useState(false);
+  const [speed, setSpeed] = useState(1);
 
   const createNumberTexture = (number) => {
     const canvas = document.createElement("canvas");
@@ -100,6 +72,7 @@ export default function Home() {
     return new THREE.CanvasTexture(canvas);
   };
 
+  // CUBE RENDERING LOGICS
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -186,7 +159,86 @@ export default function Home() {
     };
   }, [currentCube]);
 
-  // For swap
+
+  // LOGIC FOR ALGO SELECTION
+  const updateAlgo = (algoName, runVal) => {
+    if (algoName === "initial_value") {
+      setCost(initialConfig.initial_cost);
+      setCurrentCube(initialConfig.initial_cube);
+      setAlgo(algoName);
+      return;
+    }
+
+    const selectedConfig = config.find(
+      (c) => c.name.toLowerCase() == algoName && c.run == runVal
+    );
+
+    if (selectedConfig) {
+      setTime(selectedConfig.time);
+      setCost(selectedConfig.final_cost);
+      console.log(selectedConfig.final_cost)
+      setFinalConfig(selectedConfig.final_cube);
+      setSteps(selectedConfig.steps);
+
+      // For simulated annealing
+      if (selectedConfig.stuck_frequency) {
+        setStuck(selectedConfig.stuck_frequency);
+      }
+    }
+    setAlgo(algoName);
+
+    // Set the current cube to the corresponding algo
+    setCurrentCube(selectedConfig.final_cube);
+  };
+
+  const handleGeneticConfig = (runVal) => {
+    if (runVal < 1) 
+      return;
+    else {
+      console.log(algo)
+      console.log(runVal)
+      updateAlgo(algo, runVal)
+    }
+    console.log(runVal)
+    setRun(runVal)
+  }
+
+  // LOGIC for VIDEO PLAYER
+  const togglePlay = (newPlayState) => {
+    setPlay(newPlayState);
+  };
+
+  const updateSpeed = (newSpeed) => {
+    setSpeed(Number(newSpeed));
+  };
+
+  const handleSlide = (newValue) => {
+    setSlider(newValue);
+  };
+
+  useEffect(() => {
+    let interval;
+
+    if (play) {
+      interval = setInterval(() => {
+        setSlider((prevSlider) => {
+          if (prevSlider < currentSteps.length - 1) {
+            return prevSlider + 1;
+          } else {
+            clearInterval(interval);
+            setPlay(false); // Stop when the slider reaches the end
+            return prevSlider;
+          }
+        });
+      }, 1000 / speed); // Adjust interval timing based on speed
+    } else {
+      clearInterval(interval);
+    }
+
+    return () => clearInterval(interval);
+  }, [play, speed]);
+
+  // LOGIC FOR SWAP
   const handlePositionChange = (e, cubeIndex) => {
     const { name, value } = e.target;
     setPositions((prev) => ({
@@ -281,7 +333,8 @@ export default function Home() {
               name="algorithm_list"
               form="algorithm_form"
               value={algo}
-              onChange={(e) => updateConfig(e.target.value)}
+              onChange={(e) => updateAlgo(e.target.value, run)}
+              className="bg-white font-bold py-2 px-4 rounded-lg"
             >
               <option value="initial_value">Initial Config</option>
               <option value="steepest_ascent">Steepest Ascent</option>
@@ -293,28 +346,45 @@ export default function Home() {
             </select>
           </div>
 
+          {algo != "initial_value" && algo != "genetic" && (
+            <div>
+              <select
+                id="cuberun"
+                name="cuberun_list"
+                form="cuberun_form"
+                value={run}
+                onChange={(e) =>{setRun(e.target.value); updateAlgo(algo, e.target.value)}}
+                className="bg-white font-bold py-2 px-4 rounded-lg"
+              >
+                <option value={1}>First Run</option>
+                <option value={2}>Second Run</option>
+                <option value={3}>Third Run</option>
+              </select>
+            </div>
+          )}
+
           {algo == "genetic" && (
-            <div className="flex flex-row items-center justify-center gap0-2">
+            <div className="flex flex-row items-center justify-center gap-2">
               <Image
                 src={LeftTri}
                 alt="left triangle"
-                onClick={handleGeneticConfig(-1)}
+                onClick={() => handleGeneticConfig(run-1)}
               />
               <div className="flex flex-col text-center">
                 <p>Populasi, Iterasi</p>
-                <p>20, 1000</p>
+                <p>{run}, 1000</p>
               </div>
               <Image
                 src={RightTri}
                 alt="right triangle"
-                onClick={handleGeneticConfig(1)}
+                onClick={() => handleGeneticConfig(run + 1)}
               />
             </div>
           )}
         </div>
 
         {/* Information */}
-        <div className="flex flex-row gap-4">
+        {/* <div className="flex flex-row gap-4">
           <div>
             <p>Initial Cost</p>
             <p>{initialConfig.initial_cost}</p>
@@ -359,64 +429,123 @@ export default function Home() {
               <p>{elapsedTime}</p>
             </div>
           )}
-          <button className="bg-red-500" onClick={handleToInitial}>
-            <a href="#viz">Graph</a>
-          </button>
-          <button className="bg-red-500" onClick={handleToInitial}>
-            Initial State
-          </button>
-        </div>
+        </div> */}
       </section>
 
       {/* Cube */}
       <div className="flex flex-row">
         <div className="flex flex-col items-center px-6 py-4 w-1/4 space-y-8 bg-gray-500">
-          <h2 className="text-white font-bold text-xl">{algo.toUpperCase()}</h2>
+          <h2 className="text-white font-bold text-xl">
+            {algo.toUpperCase()}
+            {algo != "initial_value" && algo != "genetic" && (
+              <span>
+                - {" "}
+                {run == 1 && "First Run"}
+                {run == 2 && "Second Run"}
+                {run == 3 && "Third Run"}
+              </span>
+            )}
+          </h2>
 
           {algo != "initial_value" && (
             <div className="w-full flex flex-col space-y-8 items-center">
+              <div className="flex flex-row w-full space-x-4 ">
+                {!play && (
+                  <div
+                    onClick={() => togglePlay(!play)}
+                    className="flex flex-row items-center justify-center space-x-4 bg-white py-2 rounded-lg w-1/2"
+                  >
+                    <Image src={RightTri} alt="play-button" />
+                    <p className="font-bold">Play</p>
+                  </div>
+                )}
+                {play && (
+                  <div
+                    onClick={() => togglePlay(!play)}
+                    className="flex flex-row items-center justify-center space-x-4 bg-white py-2 rounded-lg w-1/2"
+                  >
+                    <Image src={PauseBut} alt="pause-button" width={32} />
+                    <p className="font-bold">Pause</p>
+                  </div>
+                )}
+                <select
+                  id="speed"
+                  name="speed_list"
+                  form="speed_form"
+                  value={speed}
+                  onChange={(e) => updateSpeed(e.target.value)}
+                  className="bg-white w-1/2 font-bold"
+                >
+                  <option value={1}>1X</option>
+                  <option value={2}>2X</option>
+                  <option value={4}>4X</option>
+                </select>
+              </div>
+
               <div className="w-full flex flex-col space-y-8 bg-white text-black rounded-xl pt-4 pb-8 px-4 ">
                 <p>
-                  Slider Value: <span className="font-bold">{sliderItr}</span>
+                  Iteration: <span className="font-bold">{sliderItr + 1}</span>
                 </p>
                 <DraggableSlider
-                  min={sliderItr}
-                  max={5000}
+                  min={0}
+                  max={currentSteps.length - 1}
                   initialValue={0}
-                  onChange={(newValue) => setSlider(newValue)}
+                  onChange={(newValue) => handleSlide(newValue)}
                 />
               </div>
 
               <div className="w-full bg-white text-black rounded-xl py-4 px-4">
                 <p>Current Cost</p>
-                <p className="font-bold">8000</p>
+                <p className="font-bold">{currentSteps[sliderItr].cost}</p>
                 <br />
-                <p>First Index Switched (Value)</p>
-                <p className="font-bold">3, 1, 2 (114)</p>
+                <p>First Index Switched</p>
+                <p className="font-bold">{currentSteps[sliderItr].index1}</p>
                 <br />
                 <p>Second Index Switched</p>
-                <p className="font-bold">0, 0, 0 (2)</p>
+                <p className="font-bold">{currentSteps[sliderItr].index2}</p>
               </div>
 
               <Link href="#viz" className="w-full">
-                <button className="font-bold bg-white w-full py-2 rounded-lg">See Graph</button>
+                <button className="font-bold bg-white w-full py-2 rounded-lg">
+                  See Graph
+                </button>
               </Link>
             </div>
           )}
         </div>
 
-        <div ref={mountRef} className="w-3/4" />
+        <div ref={mountRef} className="w-3/4 h-full" />
       </div>
 
       {/* Viz */}
       <div
-        className="w-full bg-white min-h-screen flex flex-col items-center justify-center"
+        className="w-full bg-white min-h-screen flex flex-col items-center space-y-32 py-32"
         id="viz"
       >
-        <h2>Visualization</h2>
-        <Image src={VizMock} alt="viz-mock" />
-        <button>
-          <a href="#cube">Back to Cube</a>
+        <h2 className="font-bold text-5xl">Visualization</h2>
+        {algo == "initial_value" && (
+          <Image src={VizMock} alt="viz-mock" width={800} />
+        )}
+        {algo == "steepest_ascent" && (
+          <Image src={Viz1} alt="viz-mock" width={800} />
+        )}
+        {algo == "stochastic" && (
+          <Image src={Viz2} alt="viz-mock" width={800} />
+        )}
+        {/* { algo == "sideways_move" &&
+          <Image src={Viz3} alt="viz-mock" width={800} /> 
+        }
+        { algo == "random_restart" &&
+          <Image src={Viz4} alt="viz-mock" width={800}/> 
+        }
+        { algo == "simulated_annealing" &&
+          <Image src={Viz5} alt="viz-mock" width={800}/> 
+        } */}
+        {algo == "genetic" && <Image src={Viz6} alt="viz-mock" width={800} />}
+        <button className="bg-gray-300 px-16 py-4 rounded-xl">
+          <a href="#cube" className="font-bold text-2xl">
+            Back to Cube
+          </a>
         </button>
       </div>
     </main>
