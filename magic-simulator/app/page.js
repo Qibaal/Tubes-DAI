@@ -1,5 +1,7 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
+
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import TWEEN from "@tweenjs/tween.js";
@@ -23,7 +25,7 @@ export default function Home() {
     1000
   );
 
-  const [algo, setAlgo] = useState("steepest_ascent");
+  const [algo, setAlgo] = useState("initial_value");
 
   const [cubes, setCubes] = useState([]);
   const [positions, setPositions] = useState({
@@ -43,8 +45,17 @@ export default function Home() {
 
   const [sliderItr, setSlider] = useState(0);
 
-  const updateConfig = () => {
-    const selectedConfig = config.find((c) => c.name.toLowerCase() === algo);
+  const updateConfig = (algoName) => {
+    if (algoName === "initial_value") {
+      setCost(initialConfig.initial_cost);
+      setCurrentCube(initialConfig.initial_cube);
+      setAlgo(algoName);
+      return;
+    }
+
+    const selectedConfig = config.find(
+      (c) => c.name.toLowerCase() === algoName
+    );
 
     if (selectedConfig) {
       setTime(selectedConfig.time);
@@ -56,7 +67,7 @@ export default function Home() {
         setStuck(selectedConfig.stuck_frequency);
       }
     }
-
+    setAlgo(algoName);
     setCurrentCube(selectedConfig.final_cube);
   };
 
@@ -94,7 +105,7 @@ export default function Home() {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
 
-    renderer.setSize(window.innerWidth / 1.335, window.innerHeight);
+    renderer.setSize(window.innerWidth / 1.335, window.innerHeight / 1.335);
     mountRef.current.appendChild(renderer.domElement);
 
     // Camera position
@@ -270,8 +281,9 @@ export default function Home() {
               name="algorithm_list"
               form="algorithm_form"
               value={algo}
-              onChange={(e) => setAlgo(e.target.value)}
+              onChange={(e) => updateConfig(e.target.value)}
             >
+              <option value="initial_value">Initial Config</option>
               <option value="steepest_ascent">Steepest Ascent</option>
               <option value="stochastic">Stochastic</option>
               <option value="sideways_move">Sideways Move</option>
@@ -280,9 +292,7 @@ export default function Home() {
               <option value="genetic">Genetic</option>
             </select>
           </div>
-          <button onClick={updateConfig} className="bg-blue-500 px-6 py-2">
-            Run
-          </button>
+
           {algo == "genetic" && (
             <div className="flex flex-row items-center justify-center gap0-2">
               <Image
@@ -360,25 +370,41 @@ export default function Home() {
 
       {/* Cube */}
       <div className="flex flex-row">
-        <div className="min-h-screen px-6 py-4 w-1/4 space-y-8 bg-gray-500">
-          <p className="w-full bg-white text-black rounded-xl py-2 px-4">Slider Value: <span className="font-bold">{sliderItr}</span></p>
-          <DraggableSlider
-            min={sliderItr}
-            max={5000}
-            initialValue={0}
-            // onChange={(newValue) => setSlider(newValue)} // Use the new value directly
-          />
-          <div className="bg-white text-black rounded-xl py-4 px-4">
-            <p>Current Cost</p>
-            <p className="font-bold">8000</p>
-            <br/>
-            <p>First Index Switched (Value)</p>
-            <p className="font-bold">3, 1, 2 (114)</p>
-            <br/>
-            <p>Second Index Switched</p>
-            <p className="font-bold">0, 0, 0 (2)</p>
-          </div>
+        <div className="flex flex-col items-center px-6 py-4 w-1/4 space-y-8 bg-gray-500">
+          <h2 className="text-white font-bold text-xl">{algo.toUpperCase()}</h2>
+
+          {algo != "initial_value" && (
+            <div className="w-full flex flex-col space-y-8 items-center">
+              <div className="w-full flex flex-col space-y-8 bg-white text-black rounded-xl pt-4 pb-8 px-4 ">
+                <p>
+                  Slider Value: <span className="font-bold">{sliderItr}</span>
+                </p>
+                <DraggableSlider
+                  min={sliderItr}
+                  max={5000}
+                  initialValue={0}
+                  onChange={(newValue) => setSlider(newValue)}
+                />
+              </div>
+
+              <div className="w-full bg-white text-black rounded-xl py-4 px-4">
+                <p>Current Cost</p>
+                <p className="font-bold">8000</p>
+                <br />
+                <p>First Index Switched (Value)</p>
+                <p className="font-bold">3, 1, 2 (114)</p>
+                <br />
+                <p>Second Index Switched</p>
+                <p className="font-bold">0, 0, 0 (2)</p>
+              </div>
+
+              <Link href="#viz" className="w-full">
+                <button className="font-bold bg-white w-full py-2 rounded-lg">See Graph</button>
+              </Link>
+            </div>
+          )}
         </div>
+
         <div ref={mountRef} className="w-3/4" />
       </div>
 

@@ -1,7 +1,7 @@
 "use client"
 import { useState, useRef, useEffect } from 'react';
 
-function DraggableSlider({ min = 0, max = 100, initialValue = 50, onChange }) {
+function DraggableSlider({ min = 0, max = 100, initialValue = 0, onChange }) {
   const [value, setValue] = useState(initialValue);
   const sliderRef = useRef(null);
   const isDragging = useRef(false);
@@ -14,7 +14,7 @@ function DraggableSlider({ min = 0, max = 100, initialValue = 50, onChange }) {
     if (isDragging.current) {
       isDragging.current = false;
     }
-    if (onChange) onChange(value);
+    // if (onChange) onChange(value);
   };
 
   const handleMouseMove = (e) => {
@@ -27,8 +27,8 @@ function DraggableSlider({ min = 0, max = 100, initialValue = 50, onChange }) {
           ((e.clientX - rect.left) / rect.width) * (max - min) + min
         )
       );
-      setValue(newValue);
-      if (onChange && isDragging.current) onChange(newValue);
+      setValue(Math.round(newValue));
+      // if (onChange && isDragging.current) onChange(newValue);
     }
   };
 
@@ -41,6 +41,10 @@ function DraggableSlider({ min = 0, max = 100, initialValue = 50, onChange }) {
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, []);
+
+  useEffect(() => {
+    onChange(value)
+  }, [value])
 
   return (
     <div
