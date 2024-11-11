@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt  # Import for plotting
 
 def stochastic_hill_climbing(cube, max_iterations=1000):
     iteration = 0
-    current_cost = cube.calculate_actual_cost()
+    current_cost = cube.calculate_cost()
     steps = []  # Track steps with index swaps and cost
 
     while current_cost > 0 and iteration < max_iterations:
@@ -21,7 +21,7 @@ def stochastic_hill_climbing(cube, max_iterations=1000):
         new_cube[pos1], new_cube[pos2] = new_cube[pos2], new_cube[pos1]
         
         cube.cube = new_cube
-        new_cost = cube.calculate_actual_cost()
+        new_cost = cube.calculate_cost()
 
         if new_cost < current_cost:
             print(f"Accepted new configuration by swapping {pos1} and {pos2}, new cost: {new_cost}")

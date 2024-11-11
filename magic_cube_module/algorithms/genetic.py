@@ -8,50 +8,43 @@ MUTATION_RATE = 0.1
 CUBE_SIZE = 5
 MAX_GENERATIONS = 1000
 
-# Objective function to calculate deviation
-def calculate_deviation(cube):
-    target_sum = CUBE_SIZE * (CUBE_SIZE**3 + 1) // 2  # The target sum for rows, columns, and diagonals
-    deviation = 0
+# Assuming MagicCube class is available and has a calculate_cost method
+class MagicCube:
+    def __init__(self, cube_data=None, size=5):
+        self.size = size
+        if cube_data is not None:
+            self.cube = np.array(cube_data).reshape((size, size, size))
+        else:
+            numbers = list(range(1, size**3 + 1))
+            np.random.shuffle(numbers)
+            self.cube = np.array(numbers).reshape((size, size, size))
+    
+    def calculate_cost(self):
+        # Placeholder for actual cost calculation method
+        return np.sum(self.cube)  # Replace with actual calculation logic
 
-    # Check rows, columns, and pillars
-    for i in range(CUBE_SIZE):
-        deviation += abs(target_sum - np.sum(cube[i, :, :]))  # Row sum deviation
-        deviation += abs(target_sum - np.sum(cube[:, i, :]))  # Column sum deviation
-        deviation += abs(target_sum - np.sum(cube[:, :, i]))  # Pillar sum deviation
-
-    # Check main space diagonals
-    deviation += abs(target_sum - np.sum([cube[i, i, i] for i in range(CUBE_SIZE)]))  # Main diagonal 1
-    deviation += abs(target_sum - np.sum([cube[i, i, CUBE_SIZE - i - 1] for i in range(CUBE_SIZE)]))  # Main diagonal 2
-    deviation += abs(target_sum - np.sum([cube[i, CUBE_SIZE - i - 1, i] for i in range(CUBE_SIZE)]))  # Main diagonal 3
-    deviation += abs(target_sum - np.sum([cube[CUBE_SIZE - i - 1, i, i] for i in range(CUBE_SIZE)]))  # Main diagonal 4
-
-    return deviation  # Return the total deviation
-
-# Initializing a random individual
+# Initializing a random individual as a MagicCube instance
 def create_individual():
-    # Create a 3D array with unique numbers shuffled randomly
-    return np.random.permutation(range(1, CUBE_SIZE**3 + 1)).reshape((CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))
+    return MagicCube(cube_data=np.random.permutation(range(1, CUBE_SIZE**3 + 1)))
 
 # Fitness function
 def fitness(individual):
-    # Return negative deviation for maximization (lower deviation is better)
-    return -calculate_deviation(individual)
+    return -individual.calculate_cost()
 
 # Ordered crossover function
 def ordered_crossover(parent1, parent2):
     size = CUBE_SIZE**3  # Total number of elements in the cube
     start, end = sorted(random.sample(range(size), 2))  # Random crossover points
 
-    # Initialize children with placeholders
+    # Flatten cubes for crossover, keeping track of unique elements
+    parent1_flat, parent2_flat = parent1.cube.flatten(), parent2.cube.flatten()
     child1, child2 = np.empty(size, dtype=int), np.empty(size, dtype=int)
     child1.fill(-1)
     child2.fill(-1)
 
-    # Copy crossover segment from parents to children
-    child1[start:end] = parent1[start:end]
-    child2[start:end] = parent2[start:end]
+    child1[start:end], child2[start:end] = parent1_flat[start:end], parent2_flat[start:end]
 
-    # Fill the rest of the child with non-duplicate elements from the other parent
+    # Helper function to fill remaining spots without duplicates
     def fill_child(child, parent):
         current_pos = end % size
         for num in parent:
@@ -60,70 +53,72 @@ def ordered_crossover(parent1, parent2):
                 current_pos = (current_pos + 1) % size
         return child
 
-    child1 = fill_child(child1, parent2)
-    child2 = fill_child(child2, parent1)
+    child1 = fill_child(child1, parent2_flat)
+    child2 = fill_child(child2, parent1_flat)
 
-    # Reshape children into 3D arrays and return
-    return child1.reshape((CUBE_SIZE, CUBE_SIZE, CUBE_SIZE)), child2.reshape((CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))
+    # Return children as new MagicCube instances
+    return MagicCube(cube_data=child1), MagicCube(cube_data=child2)
 
 # Mutation function with duplicate prevention and correction
 def mutate(individual):
-    if random.random() < MUTATION_RATE:  # Check if mutation should occur
+    if random.random() < MUTATION_RATE:
         size = CUBE_SIZE**3
-        flat_individual = individual.flatten()  # Flatten the 3D array for easier manipulation
+        flat_individual = individual.cube.flatten()
 
-        # Swap two random elements
         idx1, idx2 = random.sample(range(size), 2)
         flat_individual[idx1], flat_individual[idx2] = flat_individual[idx2], flat_individual[idx1]
 
-        # Check and correct duplicates
         unique_values = set(flat_individual)
         full_range = set(range(1, CUBE_SIZE**3 + 1))
-        missing_values = full_range - unique_values  # Find values that should be in the cube but aren't
+        missing_values = full_range - unique_values
 
-        while len(unique_values) < size:  # Check if duplicates exist
+        while len(unique_values) < size:
             for i in range(size):
-                if list(flat_individual).count(flat_individual[i]) > 1:  # Detect duplicates
-                    flat_individual[i] = missing_values.pop()  # Replace duplicate with a unique value
-                    unique_values = set(flat_individual)  # Update unique values set
+                if list(flat_individual).count(flat_individual[i]) > 1:
+                    flat_individual[i] = missing_values.pop()
+                    unique_values = set(flat_individual)
 
-        # Reshape the flat array back into a 3D array
-        individual = flat_individual.reshape((CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))
+        individual.cube = flat_individual.reshape((CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))
     return individual
 
-# Genetic algorithm function
-def genetic_algorithm(cube, population_size, generations, mutation_rate, elitism):
-    # Create an initial population of individuals
+def genetic_algorithm(population_size, max_iterations, mutation_rate, elitism):
+    results = {
+        "initial_cube": create_individual().cube.flatten().tolist(),
+        "final_cube": None,
+        "final_cost": None,
+        "objective_per_iteration": [],
+        "population_size": population_size,
+        "iterations": max_iterations,
+        "duration": None
+    }
+
+    start_time = time.time()
     population = [create_individual() for _ in range(population_size)]
-    best_cost = population[0].calculate_actual_cost()
-    best_cube = population[0]
 
-    for generation in range(generations):
-        # Sort the population by fitness (descending order)
-        population = sorted(population, key=lambda ind: fitness(ind), reverse=True)
+    for generation in range(max_iterations):
+        population = sorted(population, key=fitness, reverse=True)
 
-        # Create a new population with elitism (retain top individuals)
+        max_obj = fitness(population[0])
+        avg_obj = sum(fitness(ind) for ind in population) / population_size
+        results["objective_per_iteration"].append((max_obj, avg_obj))
+
         new_population = population[:10] if elitism else []
 
-        # Generate new individuals through crossover and mutation
         while len(new_population) < population_size:
-            parent1, parent2 = random.sample(population[:50], 2)  # Select parents from the top 50
-            offspring1, offspring2 = ordered_crossover(parent1.flatten(), parent2.flatten())
-            offspring1 = mutate(offspring1)  # Apply mutation
+            parent1, parent2 = random.sample(population[:50], 2)
+            offspring1, offspring2 = ordered_crossover(parent1, parent2)
+            offspring1 = mutate(offspring1)
             offspring2 = mutate(offspring2)
             new_population.extend([offspring1, offspring2])
 
-        # Update the population for the next generation
         population = new_population[:population_size]
 
-        # Check for the best fitness in the current generation
-        for ind in population:
-            cost = ind.calculate_actual_cost()
-            if cost < best_cost:
-                best_cost = cost
-                best_cube = ind
-            if cost == 0:
-                return best_cost, best_cube, generation
+        if fitness(population[0]) == 0:
+            break
 
-    # Return the final results
-    return best_cost, best_cube, generation
+    end_time = time.time()
+    results["final_cube"] = population[0].cube.flatten().tolist()
+    results["final_cost"] = -fitness(population[0])
+    results["duration"] = end_time - start_time
+
+    return results

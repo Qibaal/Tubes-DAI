@@ -4,14 +4,14 @@ import math
 from tqdm import tqdm
 
 def simulated_annealing(cube,
-                       initial_temperature=1000,
-                       min_temperature=0.01,
-                       max_iterations=5000,
+                       initial_temperature=100000,
+                       min_temperature=0.9995,
+                       max_iterations=1000,
                        stage_iterations=1000,
                        multi_swap_probability=0.3):
     
     current_temperature = initial_temperature
-    current_cost = cube.calculate_actual_cost()
+    current_cost = cube.calculate_cost()
     best_cost = current_cost
     best_configuration = cube.cube.copy()
 
@@ -60,7 +60,7 @@ def simulated_annealing(cube,
             else:
                 cube.cube[pos1], cube.cube[pos2] = cube.cube[pos2], cube.cube[pos1]
 
-            new_cost = cube.calculate_actual_cost()
+            new_cost = cube.calculate_cost()
             cost_difference = new_cost - current_cost
             
             acceptance_prob = calculate_acceptance_probability(cost_difference, current_temperature)

@@ -21,7 +21,7 @@ def hill_climbing_with_sideways_move(cube, max_sideways_moves, max_iterations, t
     """
     iteration = 0
     sideways_moves = 0
-    current_cost = cube.calculate_actual_cost()
+    current_cost = cube.calculate_cost()
     cost_progress = []
     steps = []  # Collect step data
 
@@ -58,7 +58,7 @@ def hill_climbing_with_sideways_move(cube, max_sideways_moves, max_iterations, t
             new_cube[pos1], new_cube[pos2] = new_cube[pos2], new_cube[pos1]
             
             cube.cube = new_cube
-            new_cost = cube.calculate_actual_cost()
+            new_cost = cube.calculate_cost()
             
             # Update swap effectiveness statistics
             swap_effectiveness[swap_type]['attempts'] += 1

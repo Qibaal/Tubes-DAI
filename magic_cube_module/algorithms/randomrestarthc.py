@@ -3,7 +3,7 @@ import random
 import itertools
 import matplotlib.pyplot as plt  # Import library for plotting
 
-def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_restart=1000):
+def random_restart_hill_climbing(cube, max_restarts, max_iterations_per_restart=50):
     best_overall_cost = float('inf')
     best_overall_cube = cube.cube.copy()
     iterations_per_restart = []  # New array to track iterations for each restart
@@ -17,7 +17,7 @@ def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_resta
             np.random.shuffle(numbers)
             cube.cube = np.array(numbers).reshape((cube.size, cube.size, cube.size))
 
-        current_cost = cube.calculate_actual_cost()
+        current_cost = cube.calculate_cost()
         steps = []  # Track steps for current restart
         iteration = 0
 
@@ -32,7 +32,7 @@ def random_restart_hill_climbing(cube, max_restarts=10, max_iterations_per_resta
                 new_cube = cube.cube.copy()
                 new_cube[pos1], new_cube[pos2] = new_cube[pos2], new_cube[pos1]
                 cube.cube = new_cube
-                new_cost = cube.calculate_actual_cost()
+                new_cost = cube.calculate_cost()
 
                 if new_cost < best_cost:
                     best_cost = new_cost
