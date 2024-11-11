@@ -1,35 +1,100 @@
 "use client";
-
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import TWEEN from "@tweenjs/tween.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
+import { initialConfig, config } from "./data/configData";
+import DraggableSlider from "./components/DraggableSlider";
+
+import VizMock from "@/public/next.svg";
+import VizMock2 from "@/public/vercel.svg";
+import LeftTri from "@/public/left-arrow.png";
+import RightTri from "@/public/right-arrow.png";
+
 export default function Home() {
   const mountRef = useRef(null);
-  const cameraRef = useRef(null);
-  
-  const [scene, setScene] = useState(null);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+
+  const [algo, setAlgo] = useState("steepest_ascent");
+
   const [cubes, setCubes] = useState([]);
   const [positions, setPositions] = useState({
     first: { x: "", y: "", z: "" },
     second: { x: "", y: "", z: "" },
   });
 
-  const [isLoading, setIsLoading] = useState(false); 
+  const [cost, setCost] = useState(initialConfig.initial_cost);
+  const [finalConfig, setFinalConfig] = useState([]);
+  const [currentCube, setCurrentCube] = useState(initialConfig.initial_cube);
+  const [elapsedTime, setTime] = useState(0);
+
+  const [iterations, setIterations] = useState(0);
+  const [stuck, setStuck] = useState(0);
+
+  const [geneticConfig, setGeneticConfig] = useState(0);
+
+  const [sliderItr, setSlider] = useState(0);
+
+  const updateConfig = () => {
+    const selectedConfig = config.find((c) => c.name.toLowerCase() === algo);
+
+    if (selectedConfig) {
+      setTime(selectedConfig.time);
+      setCost(selectedConfig.final_cost);
+      setFinalConfig(selectedConfig.final_cube);
+
+      // For simulated annealing
+      if (selectedConfig.stuck_frequency) {
+        setStuck(selectedConfig.stuck_frequency);
+      }
+    }
+
+    setCurrentCube(selectedConfig.final_cube);
+  };
+
+  const handleToInitial = (stateType) => {
+    setTime(0);
+    setCost(initialConfig.initial_cost);
+    setCurrentCube(initialConfig.initial_cube);
+    setStuck(0);
+  };
+
+  const handleGeneticConfig = (state) => {
+    setGeneticConfig(geneticConfig + state);
+    if (geneticConfig < 0) setGeneticConfig(0);
+
+    console.log(geneticConfig);
+  };
+
+  const createNumberTexture = (number) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 128;
+    canvas.height = 128;
+    const context = canvas.getContext("2d");
+    if (context) {
+      context.fillStyle = "white";
+      context.font = "bold 64px Arial";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(number, 64, 64);
+    }
+    return new THREE.CanvasTexture(canvas);
+  };
 
   useEffect(() => {
     if (!mountRef.current) return;
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    renderer.setSize(window.innerWidth / 1.335, window.innerHeight);
     mountRef.current.appendChild(renderer.domElement);
 
     // Camera position
@@ -46,28 +111,11 @@ export default function Home() {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
 
-    const axesHelper = new THREE.AxesHelper(5);
-    scene.add(axesHelper);
-
     const cubeSize = 1.3;
     const spacing = 3;
     const cubesData = [];
     let number = 1;
-
-    const createNumberTexture = (number) => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 128;
-      canvas.height = 128;
-      const context = canvas.getContext("2d");
-      if (context) {
-        context.fillStyle = "white";
-        context.font = "bold 64px Arial";
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-        context.fillText(number.toString(), 64, 64);
-      }
-      return new THREE.CanvasTexture(canvas);
-    };
+    let numberIndex = 0;
 
     for (let x = 0; x < 5; x++) {
       for (let y = 0; y < 5; y++) {
@@ -92,6 +140,7 @@ export default function Home() {
           scene.add(edges);
 
           // Create and position the number sprite
+          const number = currentCube[numberIndex];
           const numberTexture = createNumberTexture(number);
           const spriteMaterial = new THREE.SpriteMaterial({
             map: numberTexture,
@@ -106,18 +155,16 @@ export default function Home() {
           );
 
           scene.add(sprite);
-          number++;
+          numberIndex++;
         }
       }
     }
 
     setCubes(cubesData);
-    setScene(scene);
 
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
-      TWEEN.update();
       renderer.render(scene, camera);
     };
     animate();
@@ -126,8 +173,9 @@ export default function Home() {
       mountRef.current?.removeChild(renderer.domElement);
       renderer.dispose();
     };
-  }, [isLoading]);
+  }, [currentCube]);
 
+  // For swap
   const handlePositionChange = (e, cubeIndex) => {
     const { name, value } = e.target;
     setPositions((prev) => ({
@@ -213,51 +261,138 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col bg-gray-400">
-      <section className="flex flex-row justify-between py-4">
+      <section className="flex flex-row justify-between py-4 px-6" id="cube">
         {/* Algo Picking */}
-        <div>
-          <select id="algorithms" name="algorithm_list" form="algorithm_form">
-            <option value="steepest_ascent">Steepest Ascent</option>
-            <option value="stochastic">Stochastic</option>
-            <option value="sideways_move">Sideways Move</option>
-            <option value="random_restart">Random Restart</option>
-            <option value="simulated_annealing">Simulated Annealing</option>
-            <option value="genetic">Genetic</option>
-          </select>
-
-          <button 
-            className="px-8 py-4 bg-blue-500 rounded-xl"
-            onClick={() => setIsLoading(!isLoading)}
+        <div className="flex flex-row items-center justify-center gap-8">
+          <div>
+            <select
+              id="algorithms"
+              name="algorithm_list"
+              form="algorithm_form"
+              value={algo}
+              onChange={(e) => setAlgo(e.target.value)}
             >
-              Run
+              <option value="steepest_ascent">Steepest Ascent</option>
+              <option value="stochastic">Stochastic</option>
+              <option value="sideways_move">Sideways Move</option>
+              <option value="random_restart">Random Restart</option>
+              <option value="simulated_annealing">Simulated Annealing</option>
+              <option value="genetic">Genetic</option>
+            </select>
+          </div>
+          <button onClick={updateConfig} className="bg-blue-500 px-6 py-2">
+            Run
           </button>
+          {algo == "genetic" && (
+            <div className="flex flex-row items-center justify-center gap0-2">
+              <Image
+                src={LeftTri}
+                alt="left triangle"
+                onClick={handleGeneticConfig(-1)}
+              />
+              <div className="flex flex-col text-center">
+                <p>Populasi, Iterasi</p>
+                <p>20, 1000</p>
+              </div>
+              <Image
+                src={RightTri}
+                alt="right triangle"
+                onClick={handleGeneticConfig(1)}
+              />
+            </div>
+          )}
         </div>
 
         {/* Information */}
         <div className="flex flex-row gap-4">
           <div>
             <p>Initial Cost</p>
-            <p>7000</p>
+            <p>{initialConfig.initial_cost}</p>
           </div>
           <div>
             <p>Best Cost</p>
-            <p>4000</p>
+            <p>{cost}</p>
           </div>
           <div>
             <p>Total time</p>
-            <p>32 seconds</p>
+            <p>{elapsedTime}</p>
           </div>
-          <button className="bg-red-500">Initial State</button>
-          <button className="bg-blue-500">Final State</button>
+          {algo == "steepest_ascent" ||
+            algo == "stochastic" ||
+            (algo == "sideways_move" && (
+              <div>
+                <p>Iterations</p>
+                <p>{iterations}</p>
+              </div>
+            ))}
+          {algo == "sideways_move" && (
+            <div>
+              <p>Maximum Sideways</p>
+              <p>1000</p>
+            </div>
+          )}
+          {algo == "random_restart" && (
+            <>
+              <div>
+                <p>Restarts</p>
+                <p>10</p>
+              </div>
+              <div>
+                <p>Iteration per Restart</p>
+                <p>1000</p>
+              </div>
+            </>
+          )}
+          {algo == "simulated_annealing" && (
+            <div>
+              <p>Stuck Frequency</p>
+              <p>{elapsedTime}</p>
+            </div>
+          )}
+          <button className="bg-red-500" onClick={handleToInitial}>
+            <a href="#viz">Graph</a>
+          </button>
+          <button className="bg-red-500" onClick={handleToInitial}>
+            Initial State
+          </button>
         </div>
       </section>
 
       {/* Cube */}
-      {isLoading ? (
-        <div className="loader"></div> // Simple loader text
-      ) : (
-        <div ref={mountRef} className={`${isLoading ? "invisible" : ""}`}/>
-      )}
+      <div className="flex flex-row">
+        <div className="min-h-screen px-6 py-4 w-1/4 space-y-8 bg-gray-500">
+          <p className="w-full bg-white text-black rounded-xl py-2 px-4">Slider Value: <span className="font-bold">{sliderItr}</span></p>
+          <DraggableSlider
+            min={sliderItr}
+            max={5000}
+            initialValue={0}
+            // onChange={(newValue) => setSlider(newValue)} // Use the new value directly
+          />
+          <div className="bg-white text-black rounded-xl py-4 px-4">
+            <p>Current Cost</p>
+            <p className="font-bold">8000</p>
+            <br/>
+            <p>First Index Switched (Value)</p>
+            <p className="font-bold">3, 1, 2 (114)</p>
+            <br/>
+            <p>Second Index Switched</p>
+            <p className="font-bold">0, 0, 0 (2)</p>
+          </div>
+        </div>
+        <div ref={mountRef} className="w-3/4" />
+      </div>
+
+      {/* Viz */}
+      <div
+        className="w-full bg-white min-h-screen flex flex-col items-center justify-center"
+        id="viz"
+      >
+        <h2>Visualization</h2>
+        <Image src={VizMock} alt="viz-mock" />
+        <button>
+          <a href="#cube">Back to Cube</a>
+        </button>
+      </div>
     </main>
   );
 }
